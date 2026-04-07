@@ -1,0 +1,12 @@
+# Credenciales y archivos temporales
+*.json
+*.csv
+.env
+snapshots/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
