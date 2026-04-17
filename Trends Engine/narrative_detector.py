@@ -2,11 +2,14 @@ import pandas as pd
 import anthropic
 import os
 import time
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ---------------------------------------------------------
 # CONFIGURACION: Narrative Detection con Claude
 # ---------------------------------------------------------
-ANTHROPIC_API_KEY = "TU_ANTHROPIC_KEY"
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 MODEL = "claude-3-haiku-20240307"
 
 def load_data():
@@ -42,8 +45,8 @@ def analyze_narratives(client, context):
     """
     Usa Claude para detectar patrones emergentes.
     """
-    if ANTHROPIC_API_KEY == "TU_ANTHROPIC_KEY":
-        return "⚠️ Sin API Key de Anthropic"
+    if not ANTHROPIC_API_KEY:
+        return "⚠️ Sin API Key de Anthropic (agrega ANTHROPIC_API_KEY en .env)"
 
     prompt = f"""
     You are a Strategic Intelligence Analyst. 
@@ -79,10 +82,8 @@ def main():
         return
 
     # 2. Inicializar cliente
-    if ANTHROPIC_API_KEY == "TU_ANTHROPIC_KEY":
-        print("⚠️ ERROR: Debes poner tu ANTHROPIC_API_KEY en el script.")
-        # Generar reporte simulado
-        pass
+    if not ANTHROPIC_API_KEY:
+        print("⚠️ ERROR: Agrega ANTHROPIC_API_KEY en el archivo .env")
     else:
         try:
             client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)

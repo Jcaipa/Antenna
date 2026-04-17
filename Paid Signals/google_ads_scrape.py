@@ -1,77 +1,126 @@
-import asyncio
-from playwright.async_api import async_playwright
+"""
+Google Paid Signals via SerpAPI.
+Captura: Google Shopping (immersive_products), Google Ads (ads), Local Pack.
+"""
+import os, argparse
 import pandas as pd
-import time
+import requests
+from dotenv import load_dotenv
 
-# ---------------------------------------------------------
-# CONFIGURACION: Google Ads Transparency Scraper
-# ---------------------------------------------------------
-SEARCH_TERM = "travel to usa"
-SAVE_PATH = "google_ads_raw.csv"
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
-async def scrape_google_ads(search_query):
-    """
-    Usa Playwright para scrapear anuncios en Google Ads Transparency.
-    ADVERTENCIA: Google puede cambiar la UI o bloquear bots si no se usan proxies.
-    """
-    async with async_playwright() as p:
-        print(f"🚀 Iniciando Playwright para: '{search_query}'...")
-        browser = await p.chromium.launch(headless=True) # Cambiar a False para ver el proceso
-        page = await browser.new_page()
-        
-        # Ir a la pagina de Google Ads Transparency
-        url = f"https://adstransparency.google.com/?region=US&q={search_query.replace(' ', '%20')}"
-        await page.goto(url, wait_until="networkidle")
-        
-        # Esperar a que carguen los anuncios
-        try:
-            await page.wait_for_selector("article", timeout=15000)
-            print(f"✅ Anuncios encontrados para '{search_query}'.")
-        except:
-            print(f"⚠️ No se encontraron anuncios rapidamente para '{search_query}'.")
-            await browser.close()
-            return []
+SERPAPI_KEY = os.getenv("SERPAPI_KEY", "")
+SAVE_PATH   = "google_ads_raw.csv"
 
-        # Extraer datos basicos de los primeros anuncios
-        ads_elements = await page.query_selector_all("article")
-        ads_data = []
+COUNTRY_MAP = {
+    "us": {"gl": "us", "hl": "en", "location": "United States"},
+    "mx": {"gl": "mx", "hl": "es", "location": "Mexico"},
+    "co": {"gl": "co", "hl": "es", "location": "Colombia"},
+    "ar": {"gl": "ar", "hl": "es", "location": "Argentina"},
+}
 
-        for i, ad in enumerate(ads_elements[:10]):
-            try:
-                # El anunciante suele estar en un span o div dentro del article
-                advertiser = await ad.inner_text()
-                # Limpiar texto para obtener anunciante y fecha basica
-                snippet = advertiser.split("\n")[0] if advertiser else "Desconocido"
-                
-                ads_data.append({
-                    "platform": "Google Search/Display",
-                    "page_name": snippet,
-                    "created_at": "Verificación pendiente (Manual)", # La fecha completa a veces esta en un hover
-                    "copy": advertiser.replace("\n", " ")[:200] + "...",
-                    "url": page.url,
-                    "search_term": search_query
-                })
-            except:
-                continue
-                
-        await browser.close()
-        return ads_data
 
-async def main():
-    temas = ["travel to usa", "us immigration lawyer", "us tourism news"]
+def fetch_paid_signals(keyword: str, country: str = "us", limit: int = 5) -> list:
+    if not SERPAPI_KEY:
+        print("⚠️  SERPAPI_KEY no encontrada.")
+        return []
+
+    cfg = COUNTRY_MAP.get(country.lower(), COUNTRY_MAP["us"])
+    print(f"🚀 Google Ads [{country.upper()}]: '{keyword}'...")
+
+    try:
+        resp = requests.get(
+            "https://serpapi.com/search.json",
+            params={
+                "engine":   "google",
+                "q":        keyword,
+                "api_key":  SERPAPI_KEY,
+                "gl":       cfg["gl"],
+                "hl":       cfg["hl"],
+                "location": cfg["location"],
+                "num":      10,
+            },
+            timeout=20,
+        )
+        data = resp.json()
+    except Exception as e:
+        print(f"  ❌ Error SerpAPI: {e}")
+        return []
+
+    results = []
+
+    # 1. Text ads (cuando existen)
+    for ad in data.get("ads", [])[:limit]:
+        results.append({
+            "herramienta":      "Google Text Ad",
+            "pais_busqueda":    country.lower(),
+            "keyword_busqueda": keyword,
+            "platform":         "Google Search",
+            "page_name":        ad.get("title", ""),
+            "copy":             ad.get("description", ""),
+            "url":              ad.get("link", ad.get("displayed_link", "")),
+            "created_at":       "Recent",
+        })
+
+    # 2. Google Shopping / immersive_products
+    for item in data.get("immersive_products", [])[:limit]:
+        results.append({
+            "herramienta":      "Google Shopping",
+            "pais_busqueda":    country.lower(),
+            "keyword_busqueda": keyword,
+            "platform":         "Google Shopping",
+            "page_name":        item.get("source", item.get("seller", "")),
+            "copy":             f"{item.get('title', '')} — {item.get('price', '')}",
+            "url":              item.get("link", item.get("product_link", "")),
+            "created_at":       "Recent",
+        })
+
+    # 3. Local Pack (negocios locales patrocinados)
+    local_results = data.get("local_results", [])
+    if isinstance(local_results, dict):
+        local_results = local_results.get("places", [])
+    for biz in local_results[:3]:
+        results.append({
+            "herramienta":      "Google Local Pack",
+            "pais_busqueda":    country.lower(),
+            "keyword_busqueda": keyword,
+            "platform":         "Google Local",
+            "page_name":        biz.get("title", ""),
+            "copy":             f"{biz.get('type', '')} · {biz.get('address', '')} · ⭐{biz.get('rating', '')}",
+            "url":              biz.get("website", biz.get("place_id_search", "")),
+            "created_at":       "Recent",
+        })
+
+    if results:
+        print(f"  ✅ {len(results)} señales de pago encontradas")
+    else:
+        print(f"  ⚠️  Sin señales para '{keyword}' en {country.upper()}")
+
+    return results
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Paid Signals - Google via SerpAPI")
+    parser.add_argument("--keywords",  type=str)
+    parser.add_argument("--countries", type=str)
+    parser.add_argument("--limit",     type=int, default=5)
+    args = parser.parse_args()
+
+    keywords  = [k.strip() for k in args.keywords.split(",")]  if args.keywords  else ["lentes graduados", "proyecto inmobiliario"]
+    countries = [c.strip() for c in args.countries.split(",")] if args.countries else ["us", "mx", "co"]
+
     all_results = []
-    
-    for t in temas:
-        results = await scrape_google_ads(t)
-        all_results.extend(results)
-        await asyncio.sleep(2)
+    for country in countries:
+        for kw in keywords:
+            all_results.extend(fetch_paid_signals(kw, country=country, limit=args.limit))
 
     if all_results:
         df = pd.DataFrame(all_results)
         df.to_csv(SAVE_PATH, index=False, encoding="utf-8")
-        print(f"\n✅ Extracción de Google completada: {SAVE_PATH}")
+        print(f"\n✅ Extracción completa: {SAVE_PATH} ({len(all_results)} señales)")
     else:
-        print("\n⚠️ No se pudieron recolectar anuncios de Google Ads.")
+        print("⚠️ No se encontraron señales pagadas.")
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

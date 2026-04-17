@@ -1,21 +1,15 @@
 import requests
 import pandas as pd
 import time
+import os
+from dotenv import load_dotenv
 
-# ---------------------------------------------------------
-# CONFIGURACION: Meta Ad Library
-# 1. Ve a https://developers.facebook.com/tools/explorer/
-# 2. Selecciona tu App y genera un "User Access Token".
-# 3. Asegúrate de tener el permiso 'ads_read'.
-# ---------------------------------------------------------
-ACCESS_TOKEN = "TU_META_ACCESS_TOKEN"
+load_dotenv()
+ACCESS_TOKEN = os.getenv("META_ACCESS_TOKEN", "")
 
-def fetch_meta_ads(search_term, country='US', limit=10):
-    """
-    Consulta la API de Meta Ad Library para obtener anuncios activos.
-    """
-    if ACCESS_TOKEN == "TU_META_ACCESS_TOKEN":
-        print("⚠️ ERROR: Debes poner tu ACCESS_TOKEN de Meta en el script.")
+def fetch_meta_ads(search_term, country='US', limit=3):
+    if not ACCESS_TOKEN:
+        print(f"⚠️ Saltando Meta [{country}]: Sin Token.")
         return []
 
     url = "https://graph.facebook.com/v19.0/ads_archive"
@@ -24,50 +18,52 @@ def fetch_meta_ads(search_term, country='US', limit=10):
         "search_terms": search_term,
         "ad_reached_countries": f"['{country}']",
         "ad_active_status": "ACTIVE",
-        "fields": "ad_creation_time,ad_creative_bodies,page_name,snapshot_url,demographic_distribution",
+        "fields": "ad_creation_time,ad_creative_bodies,page_name,snapshot_url",
         "limit": limit
     }
-
-    print(f"📡 Consultando Meta Ad Library para: '{search_term}'...")
     try:
         response = requests.get(url, params=params)
-        response.raise_for_status()
         data = response.json()
-        
         ads = []
         for item in data.get('data', []):
-            # ad_creative_bodies es una lista, tomamos el primer texto
             bodies = item.get('ad_creative_bodies', [])
-            copy = bodies[0] if bodies else ""
-            
             ads.append({
+                "herramienta": "Meta Ad Library API",
+                "pais_busqueda": country.lower(),
+                "keyword_busqueda": search_term,
                 "platform": "Meta",
                 "page_name": item.get('page_name'),
                 "created_at": item.get('ad_creation_time'),
-                "copy": copy,
-                "url": item.get('snapshot_url'),
-                "search_term": search_term
+                "copy": bodies[0] if bodies else "",
+                "url": item.get('snapshot_url')
             })
         return ads
-    except Exception as e:
-        print(f"❌ Error al consultar Meta: {e}")
+    except:
         return []
 
 def main():
-    temas = ["travel to usa", "us visa help", "united states tourism"]
+    import argparse
+    parser = argparse.ArgumentParser(description="Paid Signals - Meta Ad Library")
+    parser.add_argument("--keywords", type=str, help="Keywords separated by comma")
+    parser.add_argument("--countries", type=str, help="Country codes separated by comma (e.g. US,MX,CO)")
+    parser.add_argument("--limit", type=int, default=3, help="Max ads per query")
+    args = parser.parse_args()
+
+    temas = [k.strip() for k in args.keywords.split(",")] if args.keywords else \
+            ["Estados Unidos", "Trump", "Migración Estados Unidos", "Visa Estado Unidense"]
+    paises = [c.strip().upper() for c in args.countries.split(",")] if args.countries else \
+             ["US", "MX", "CO", "AR"]
+
     all_ads = []
-
-    for tema in temas:
-        results = fetch_meta_ads(tema)
-        all_ads.extend(results)
-        time.sleep(1)
-
+    for p in paises:
+        for t in temas:
+            all_ads.extend(fetch_meta_ads(t, country=p, limit=args.limit))
+            time.sleep(1)
     if all_ads:
-        df = pd.DataFrame(all_ads)
-        df.to_csv("meta_ads_raw.csv", index=False, encoding="utf-8")
-        print(f"\n✅ Extracción de Meta completada: meta_ads_raw.csv")
+        pd.DataFrame(all_ads).to_csv("meta_ads_raw.csv", index=False, encoding="utf-8")
+        print(f"✅ Extracción de Meta completa: meta_ads_raw.csv ({len(all_ads)} anuncios)")
     else:
-        print("\n⚠️ No se obtuvieron anuncios de Meta.")
+        print("⚠️ No se encontraron anuncios. Verifica META_ACCESS_TOKEN en .env")
 
 if __name__ == "__main__":
     main()

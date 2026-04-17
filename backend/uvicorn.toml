@@ -1,0 +1,3 @@
+# Uvicorn configuration — excludes venv from file watcher
+[tool.uvicorn]
+reload_excludes = ["venv", "__pycache__", "*.pyc", "*.pyo"]

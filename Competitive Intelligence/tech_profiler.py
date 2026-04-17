@@ -3,62 +3,64 @@ import requests
 import pandas as pd
 import os
 import time
+from serpapi import GoogleSearch
+from dotenv import load_dotenv
 
-# ---------------------------------------------------------
-# CONFIGURACION: Explorador Tecnologico (Wappalyzer)
-# ---------------------------------------------------------
-COMPETITORS = [
-    "https://www.expedia.com/",
-    "https://www.tripadvisor.com/",
-    "https://www.booking.com/"
-]
+load_dotenv()
+SERP_API_KEY = os.getenv("SERPAPI_KEY")
+
+def get_top_url(query, country_code="mx"):
+    print(f"🔎 Tech Discovery [{country_code.upper()}]: '{query}'...")
+    params = {
+        "q": query,
+        "gl": country_code,
+        "hl": "es" if country_code != "us" else "en",
+        "api_key": SERP_API_KEY
+    }
+    try:
+        search = GoogleSearch(params)
+        results = search.get_dict()
+        organic = results.get("organic_results", [])
+        if organic:
+            return organic[0].get("link")
+        return None
+    except:
+        return None
 
 def analyze_tech_stack(url):
-    """
-    Usa Wappalyzer para detectar CMS, Analytics, Librerías, etc.
-    Analiza tanto encabezados HTTP como el contenido HTML.
-    """
-    print(f"🚀 Analizando stack de: {url}...")
+    print(f"🚀 Analizando stack: {url}...")
     try:
-        # 1. Obtener la pagina (con headers para mayor precision)
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'}
-        response = requests.get(url, headers=headers, timeout=15)
-        
-        # 2. Inicializar Wappalyzer
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(url, headers=headers, timeout=12)
         wappalyzer = Wappalyzer.latest()
         webpage = WebPage.new_from_response(response)
-        
-        # 3. Extraer tecnologías
-        techs = wappalyzer.analyze_with_categories(webpage)
-        
-        return techs
-    except Exception as e:
-        print(f"❌ Error al analizar {url}: {e}")
+        return wappalyzer.analyze_with_categories(webpage)
+    except:
         return {}
 
 def main():
+    temas = ["Estados Unidos", "Trump", "Migración Estados Unidos"]
+    paises = ["us", "mx", "co"]
     all_profiles = []
     
-    for url in COMPETITORS:
-        results = analyze_tech_stack(url)
-        
-        if results:
-            for tech, categories in results.items():
-                all_profiles.append({
-                    "url": url,
-                    "technology": tech,
-                    "categories": ", ".join(categories)
-                })
-        time.sleep(2)
-
+    for p in paises:
+        for t in temas:
+            url = get_top_url(t, country_code=p)
+            if url:
+                techs = analyze_tech_stack(url)
+                for tech, categories in techs.items():
+                    all_profiles.append({
+                        "herramienta": "Wappalyzer (Dynamic)",
+                        "pais_busqueda": p,
+                        "keyword_busqueda": t,
+                        "url": url,
+                        "technology": tech,
+                        "categories": ", ".join(categories)
+                    })
+            time.sleep(2)
     if all_profiles:
-        df = pd.DataFrame(all_profiles)
-        output_file = "competitor_tech_stacks.csv"
-        df.to_csv(output_file, index=False, encoding="utf-8")
-        print(f"\n✅ Perfil tecnologico completado!")
-        print(f"📊 Archivo generado: {output_file}")
-    else:
-        print("\n⚠️ No se pudieron detectar tecnologías.")
+        pd.DataFrame(all_profiles).to_csv("competitor_tech_stacks.csv", index=False, encoding="utf-8")
+        print(f"✅ Perfil tecnológico completo: competitor_tech_stacks.csv")
 
 if __name__ == "__main__":
     main()

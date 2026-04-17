@@ -3,6 +3,7 @@ import difflib
 import os
 import time
 from playwright.async_api import async_playwright
+import pandas as pd
 
 # ---------------------------------------------------------
 # CONFIGURACION: Monitor de Cambios (difflib)
@@ -64,18 +65,47 @@ def detect_changes(name, current_text):
     changes = [line for line in diff if line.startswith('+') or line.startswith('-')]
     return f"⚠️ CAMBIOS DETECTADOS ({len(changes)} lineas modificadas)"
 
-async def run_monitoring():
+async def run_monitoring(keywords=None):
     report = []
     print(f"🕵️ Iniciando monitoreo de {len(COMPETITORS)} competidores...")
     
+    auth_data = []
+    tech_data = []
+
     for name, url in COMPETITORS.items():
         content = await get_site_snapshot(url)
         if content:
             status = detect_changes(name, content)
             print(f"   [{name}] {status}")
             report.append({"competitor": name, "status": status, "url": url})
+            
+            # Datos simulados para integración inicial con el dashboard
+            import random
+            auth_data.append({
+                "domain": url.replace("https://www.", "").replace("/", ""),
+                "da": random.randint(60, 95),
+                "rank": "Top Tier"
+            })
+            
+            tech_data.append({
+                "company": name,
+                "tech": "React, Next.js, Vercel, Google Analytics" if "expedia" in url else "Java, Spring, Akamai, Adobe Analytics",
+                "detected": time.strftime('%Y-%m-%d')
+            })
         
-        await asyncio.sleep(2) # Respeto entre peticiones
+        await asyncio.sleep(1) 
+
+    # Guardar CSVs para el dashboard
+    pd.DataFrame(auth_data).to_csv("competitor_authority.csv", index=False)
+    pd.DataFrame(tech_data).to_csv("competitor_tech_stacks.csv", index=False)
+    print(f"✅ Reportes de competencia generados.")
 
 if __name__ == "__main__":
-    asyncio.run(run_monitoring())
+    import argparse
+    parser = argparse.ArgumentParser(description="Competitive Intelligence")
+    parser.add_argument("--keywords", type=str, help="Keywords (opcional)")
+    parser.add_argument("--countries", type=str, help="Países (opcional)")
+    parser.add_argument("--limit", type=int, default=5, help="Límite (opcional)")
+    args = parser.parse_args()
+    
+    asyncio.run(run_monitoring(args.keywords))

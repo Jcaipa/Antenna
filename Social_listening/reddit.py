@@ -2,15 +2,16 @@ import requests
 import pandas as pd
 from textblob import TextBlob
 import time
+import urllib.parse
+from deep_translator import GoogleTranslator
 
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"}
 
-# ---------------------------
-# FUNCION: sentimiento
-# ---------------------------
 def get_sentiment(text):
     try:
-        analysis = TextBlob(text)
+        if not text: return "neutral", 0
+        translated = GoogleTranslator(source='auto', target='en').translate(text)
+        analysis = TextBlob(translated)
         polarity = analysis.sentiment.polarity
         
         if polarity > 0:
@@ -22,12 +23,10 @@ def get_sentiment(text):
     except:
         return "error", 0
 
-
-# ---------------------------
-# FUNCION: obtener posts
-# ---------------------------
-def get_posts(subreddit, tipo="top", limit=10):
-    url = f"https://old.reddit.com/r/{subreddit}/{tipo}.json?limit={limit}&t=week"
+def get_posts_by_query(query, limit=10):
+    # Search all of Reddit for the specific query
+    encoded_query = urllib.parse.quote(query)
+    url = f"https://old.reddit.com/search.json?q={encoded_query}&sort=relevance&t=month&limit={limit}"
     
     for attempt in range(3):
         try:
@@ -44,18 +43,12 @@ def get_posts(subreddit, tipo="top", limit=10):
             return data["data"]["children"]
         except Exception as e:
             if attempt == 2:
-                print(f"❌ Error final al obtener posts de r/{subreddit}: {e}")
+                print(f"❌ Error final al buscar '{query}' en Reddit: {e}")
                 return []
             time.sleep(2)
     return []
-    return []
 
-
-# ---------------------------
-# FUNCION: comentarios
-# ---------------------------
 def get_comments(permalink, max_comments=10):
-    """Obtiene comentarios usando el permalink de Reddit."""
     url = f"https://www.reddit.com{permalink}.json"
     
     for attempt in range(2):
@@ -83,82 +76,59 @@ def get_comments(permalink, max_comments=10):
             time.sleep(2)
     return []
 
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Social Listening - Reddit")
+    parser.add_argument("--keywords", type=str, help="Keywords separated by comma")
+    parser.add_argument("--limit", type=int, default=10, help="Results limit per keyword")
+    parser.add_argument("--countries", type=str, help="Countries separated by comma (optional)")
+    args = parser.parse_args()
 
-# ---------------------------
-# EJECUCION
-# ---------------------------
-
-subreddits_noticias = ["news", "worldnews", "politics"]
-subreddits_opinion = ["AskReddit", "TrueOffMyChest"]
-
-all_data = []
-
-# 🔹 noticias
-# 🔹 noticias
-for sub in subreddits_noticias:
-    print(f"\n📡 Trayendo noticias de r/{sub}...")
-    raw_posts = get_posts(sub)
+    if args.keywords:
+        temas = [k.strip() for k in args.keywords.split(",")]
+    else:
+        temas = ["Estados Unidos", "Trump", "Estados Unidos e Iran", "ICE", "Migración Estados Unidos", "Visa Estado Unidense"]
     
-    for i, p_raw in enumerate(raw_posts):
-        info = p_raw["data"]
-        titulo = info["title"]
-        print(f"   [{i+1}/{len(raw_posts)}] Procesando: {titulo[:60]}...")
-        
-        sentimiento, score_sent = get_sentiment(titulo)
-        
-        p_data = {
-            "subreddit": sub,
-            "tipo": "noticia",
-            "titulo": titulo,
-            "score": info["score"],
-            "comentarios": info["num_comments"],
-            "url": info["url"],
-            "permalink": info["permalink"],
-            "sentimiento": sentimiento,
-            "sent_score": score_sent
-        }
-        
-        comentarios = get_comments(info["permalink"], max_comments=10)
-        p_data["comentarios_detalle"] = comentarios
-        all_data.append(p_data)
-        
-        time.sleep(2)  # Mayor espera para evitar 429
+    all_data = []
 
-# 🔹 opiniones
-for sub in subreddits_opinion:
-    print(f"\n💬 Trayendo opiniones de r/{sub}...")
-    raw_posts = get_posts(sub)
-    
-    for i, p_raw in enumerate(raw_posts):
-        info = p_raw["data"]
-        titulo = info["title"]
-        print(f"   [{i+1}/{len(raw_posts)}] Procesando: {titulo[:60]}...")
+    for tema in temas:
+        print(f"\n📡 Trayendo posts de Reddit sobre '{tema}'...")
+        raw_posts = get_posts_by_query(tema, limit=args.limit)
         
-        sentimiento, score_sent = get_sentiment(titulo)
-        
-        p_data = {
-            "subreddit": sub,
-            "tipo": "opinion",
-            "titulo": titulo,
-            "score": info["score"],
-            "comentarios": info["num_comments"],
-            "url": info["url"],
-            "permalink": info["permalink"],
-            "sentimiento": sentimiento,
-            "sent_score": score_sent
-        }
-        
-        comentarios = get_comments(info["permalink"], max_comments=10)
-        p_data["comentarios_detalle"] = comentarios
-        all_data.append(p_data)
-        
-        time.sleep(2)
+        for i, p_raw in enumerate(raw_posts):
+            info = p_raw["data"]
+            titulo = info.get("title", "")
+            subreddit = info.get("subreddit", "")
+            
+            print(f"   [{i+1}/{len(raw_posts)}] Procesando: {titulo[:60]}...")
+            
+            sentimiento, score_sent = get_sentiment(titulo)
+            
+            p_data = {
+                "herramienta": "Reddit Search API",
+                "pais_busqueda": "us/global",
+                "keyword_busqueda": tema,
+                "subreddit": subreddit,
+                "tipo": "busqueda",
+                "titulo": titulo,
+                "score": info.get("score", 0),
+                "comentarios": info.get("num_comments", 0),
+                "url": info.get("url", ""),
+                "permalink": info.get("permalink", ""),
+                "sentimiento": sentimiento,
+                "sent_score": score_sent
+            }
+            
+            comentarios = get_comments(info["permalink"], max_comments=10)
+            p_data["comentarios_detalle"] = str(comentarios) if comentarios else ""
+            
+            all_data.append(p_data)
+            time.sleep(2)  # Mantenemos respeto al ratelimit de reddit
 
+    df = pd.DataFrame(all_data)
+    output_file = "reddit_us_insights.csv"
+    df.to_csv(output_file, index=False, encoding="utf-8")
+    print(f"✅ Archivo generado: {output_file}")
 
-# ---------------------------
-# GUARDAR
-# ---------------------------
-df = pd.DataFrame(all_data)
-df.to_csv("reddit_us_insights.csv", index=False, encoding="utf-8")
-
-print("✅ Archivo generado: reddit_us_insights.csv")
+if __name__ == "__main__":
+    main()

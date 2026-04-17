@@ -6,19 +6,22 @@ from googleapiclient.errors import HttpError
 
 # CONFIGURACIÓN
 SERVICE_ACCOUNT_FILE = '/Users/antpack/Antenna/SEO / AEO/my-project-64286-457920-74f7b16ec899.json'
-SPREADSHEET_ID = '188RfkKYaNXTDWHlY-zHvNJcAa6dFp_0AlnsMYZd7DXg'
+SPREADSHEET_ID = '1GqIjd56382iE5IpJ46i-oI0idXXaY8mvYxXvjwIRxRw'   # CACI Dashboard sheet
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 # MAPEO DE ARCHIVOS A PESTAÑAS
 FILE_MAPPING = {
-    'Social_listening/reddit_us_insights.csv': 'Reddit_Monitor',
-    'Social_listening/youtube_us_insights.csv': 'YouTube_Trends',
-    'Social_listening/news_us_insights.csv': 'Google_News',
-    'SEO / AEO/serp_rankings_audit.csv': 'SEO_Rankings',
-    'SEO / AEO/aeo_visibility_audit.csv': 'AI_Visibility_AEO',
+    'Social_listening/reddit_us_insights.csv':    'Reddit_Monitor',
+    'Social_listening/youtube_us_insights.csv':   'YouTube_Trends',
+    'Social_listening/news_us_insights.csv':      'Google_News',
+    'SEO / AEO/serp_rankings_audit.csv':          'SEO_Rankings',
+    'SEO / AEO/aeo_visibility_audit.csv':         'AI_Visibility_AEO',
     'Competitive Intelligence/competitor_authority.csv': 'Competitor_DA',
     'Competitive Intelligence/competitor_tech_stacks.csv': 'Tech_Profiler',
-    'Trends Engine/hacker_news_raw.csv': 'Hacker_News_Trends'
+    'Trends Engine/hacker_news_raw.csv':          'Hacker_News_Trends',
+    'Trends Engine/google_trends_raw.csv':        'Google_Trends',
+    'Paid Signals/google_ads_raw.csv':            'Google_Ads',
+    'Paid Signals/meta_ads_raw.csv':              'Meta_Ads',
 }
 
 def get_sheets_service():

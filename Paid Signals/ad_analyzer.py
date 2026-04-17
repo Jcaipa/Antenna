@@ -2,19 +2,22 @@ import anthropic
 import pandas as pd
 import os
 import time
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ---------------------------------------------------------
 # CONFIGURACION: Claude Haiku Analysis
 # ---------------------------------------------------------
-ANTHROPIC_API_KEY = "TU_ANTHROPIC_KEY"
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 MODEL = "claude-3-haiku-20240307"
 
 def analyze_ad_with_haiku(client, copy_text):
     """
     Usa Claude Haiku para analizar la estrategia detras del copy del anuncio.
     """
-    if ANTHROPIC_API_KEY == "TU_ANTHROPIC_KEY":
-        return "⚠️ Sin API Key de Anthropic"
+    if not ANTHROPIC_API_KEY:
+        return "⚠️ Sin API Key de Anthropic (agrega ANTHROPIC_API_KEY en .env)"
 
     prompt = f"""
     Analyze the following ad copy and describe:
@@ -55,10 +58,13 @@ def main():
     df = pd.concat(combined_data, ignore_index=True)
     
     # 2. Inicializar cliente de Anthropic
+    if not ANTHROPIC_API_KEY:
+        print("⚠️ ERROR: Agrega ANTHROPIC_API_KEY en el archivo .env")
+        return
     try:
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-    except:
-        print("⚠️ ERROR: No se pudo inicializar Anthropic. Verifica tu API Key.")
+    except Exception as e:
+        print(f"⚠️ ERROR: No se pudo inicializar Anthropic: {e}")
         return
 
     print(f"🚀 Analizando {len(df)} anuncios con Claude Haiku...")

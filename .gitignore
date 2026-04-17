@@ -1,12 +1,22 @@
 # Credenciales y archivos temporales
 *.json
 *.csv
-.env
+.env*
 snapshots/
 
 # Python
 __pycache__/
 *.pyc
+venv/
+.venv/
+
+# Node.js
+node_modules/
+.next/
+dist/
+
+# Logs
+*.log
 
 # OS
 .DS_Store

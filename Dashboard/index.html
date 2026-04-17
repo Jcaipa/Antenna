@@ -1,0 +1,3767 @@
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light only" />
+  <title>LATAM Sentiment</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1&display=swap"
+    rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+
+  <style>
+    :root {
+      --brand: #ff5a1f;
+      --brand-2: #f1c64f;
+      --brand-soft: rgba(255, 90, 31, 0.12);
+
+      --ink: #201813;
+      --ink-2: #5f564f;
+      --ink-3: #988d84;
+
+      --bg-0: #1d130f;
+      --bg-1: #2b1b14;
+      --bg-2: #4b2d1d;
+
+      --paper: #fbf6f1;
+      --paper-2: #f4ece5;
+
+      --card: rgba(255, 255, 255, 0.78);
+      --card-strong: rgba(255, 255, 255, 0.92);
+      --glass-dark: rgba(255, 255, 255, 0.08);
+
+      --line: rgba(32, 24, 19, 0.10);
+      --line-2: rgba(32, 24, 19, 0.06);
+      --line-3: rgba(255, 255, 255, 0.10);
+
+      --shadow-xs: 0 4px 18px rgba(31, 17, 8, 0.06);
+      --shadow-sm: 0 10px 30px rgba(31, 17, 8, 0.08);
+      --shadow-md: 0 20px 60px rgba(31, 17, 8, 0.12);
+      --shadow-lg: 0 30px 90px rgba(20, 10, 6, 0.18);
+
+      --radius-xs: 12px;
+      --radius-sm: 16px;
+      --radius-md: 20px;
+      --radius-lg: 28px;
+      --radius-xl: 36px;
+
+      --sidebar-w: 88px;
+      --grid-gap: 22px;
+
+      --danger: #df4d43;
+      --danger-soft: rgba(223, 77, 67, 0.12);
+      --warning: #ca8b16;
+      --warning-soft: rgba(202, 139, 22, 0.14);
+      --success: #2b8e5c;
+      --success-soft: rgba(43, 142, 92, 0.12);
+      --neutral: #8b63e7;
+      --neutral-soft: rgba(139, 99, 231, 0.12);
+      --blue: #4b7bf2;
+      --blue-soft: rgba(75, 123, 242, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      font-family: "DM Sans", sans-serif;
+      font-size: 14px;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(255, 90, 31, 0.10), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(241, 198, 79, 0.12), transparent 20%),
+        linear-gradient(180deg, #fcf7f2 0%, #f5eee7 100%);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .syne {
+      font-family: "Syne", sans-serif;
+    }
+
+    .ms {
+      font-family: "Material Symbols Outlined";
+      font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+      line-height: 1;
+      vertical-align: middle;
+    }
+
+    .msf {
+      font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 20;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(32, 24, 19, 0.16);
+      border-radius: 999px;
+    }
+
+    .dot-live {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: #67d391;
+      box-shadow: 0 0 0 6px rgba(103, 211, 145, 0.12);
+      animation: pulse 1.8s infinite ease-in-out;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(0.88);
+        opacity: 0.62;
+      }
+    }
+
+    .spinner {
+      width: 34px;
+      height: 34px;
+      border: 3px solid rgba(255, 90, 31, 0.14);
+      border-top-color: var(--brand);
+      border-radius: 999px;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    .b-red {
+      color: var(--danger);
+      background: var(--danger-soft);
+      border-color: rgba(223, 77, 67, 0.18);
+    }
+
+    .b-amber {
+      color: var(--warning);
+      background: var(--warning-soft);
+      border-color: rgba(202, 139, 22, 0.18);
+    }
+
+    .b-green {
+      color: var(--success);
+      background: var(--success-soft);
+      border-color: rgba(43, 142, 92, 0.18);
+    }
+
+    .b-blue {
+      color: var(--blue);
+      background: var(--blue-soft);
+      border-color: rgba(75, 123, 242, 0.18);
+    }
+
+    .b-plum {
+      color: var(--neutral);
+      background: var(--neutral-soft);
+      border-color: rgba(139, 99, 231, 0.18);
+    }
+
+    .b-gray {
+      color: var(--ink-2);
+      background: rgba(32, 24, 19, 0.06);
+      border-color: rgba(32, 24, 19, 0.08);
+    }
+
+    .surface {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.44);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: var(--shadow-md);
+      border-radius: var(--radius-md);
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+      height: 100vh;
+      gap: 0;
+    }
+
+    .sidebar {
+      position: relative;
+      background: rgba(34, 24, 19, 0.96);
+      color: rgba(255, 255, 255, 0.76);
+      padding: 22px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03);
+      z-index: 8;
+    }
+
+    .sidebar::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255, 90, 31, 0.08), transparent 22%, transparent 78%, rgba(241, 198, 79, 0.05));
+      pointer-events: none;
+    }
+
+    .sb-logo {
+      position: relative;
+      z-index: 1;
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--brand) 0%, #ff7c2b 100%);
+      display: grid;
+      place-items: center;
+      margin: 0 auto;
+      box-shadow: 0 16px 32px rgba(255, 90, 31, 0.26);
+    }
+
+    .sb-nav,
+    .sb-bottom {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sb-nav {
+      flex: 1;
+      margin-top: 8px;
+    }
+
+    .sb-btn {
+      position: relative;
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.56);
+      display: grid;
+      place-items: center;
+      transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+    }
+
+    .sb-btn .ms {
+      font-size: 22px;
+    }
+
+    .sb-btn:hover,
+    .sb-btn.active {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.10);
+      transform: translateY(-1px);
+    }
+
+    .sb-btn.active {
+      background: linear-gradient(135deg, rgba(255, 90, 31, 0.22), rgba(255, 124, 43, 0.10));
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .sb-tooltip {
+      position: absolute;
+      left: calc(100% + 12px);
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(32, 24, 19, 0.94);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 8px 10px;
+      border-radius: 10px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sb-btn:hover .sb-tooltip {
+      opacity: 1;
+    }
+
+    .sb-divider {
+      width: 32px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.10);
+      margin: 6px auto;
+    }
+
+    .workspace {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .workspace-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 28px 0;
+      flex-wrap: wrap;
+    }
+
+    .hero {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+      border-radius: var(--radius-lg);
+      padding: 20px 28px;
+      box-shadow: var(--shadow-md);
+      background: linear-gradient(145deg, rgba(34, 24, 19, 0.98), rgba(70, 44, 27, 0.96));
+    }
+
+    .hero::before,
+    .hero::after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      pointer-events: none;
+    }
+
+    .hero::before {
+      width: 280px;
+      height: 280px;
+      top: -120px;
+      right: -40px;
+      background: radial-gradient(circle, rgba(255, 90, 31, 0.18), transparent 64%);
+    }
+
+    .hero::after {
+      width: 220px;
+      height: 220px;
+      bottom: -120px;
+      left: 28%;
+      background: radial-gradient(circle, rgba(241, 198, 79, 0.16), transparent 62%);
+    }
+
+    .hero-copy,
+    .hero-meta {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-title {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(28px, 2.7vw, 36px);
+      line-height: 1.02;
+      letter-spacing: -0.05em;
+      margin: 0;
+    }
+
+    .hero-meta {
+      min-width: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .chip-btn,
+    .btn,
+    .modal-btn {
+      min-height: 42px;
+      padding: 0 16px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    .chip-btn {
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .chip-btn:hover,
+    .btn:hover,
+    .modal-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .hero-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 12px;
+    }
+
+    .content-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 22px 28px 28px;
+    }
+
+    .panel {
+      display: none;
+      animation: fadeIn 0.22s ease;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .section-head h2 {
+      font-family: "Syne", sans-serif;
+      font-size: 22px;
+      letter-spacing: -0.03em;
+      line-height: 1.06;
+    }
+
+    .section-head p {
+      max-width: 740px;
+      margin-top: 6px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--ink-2);
+    }
+
+    .section-label {
+      margin-bottom: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+
+    .section-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .grid-2,
+    .grid-3 {
+      display: grid;
+      gap: var(--grid-gap);
+      margin-bottom: 24px;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .kpi-card {
+      position: relative;
+      min-height: 128px;
+      padding: 20px 24px;
+      overflow: hidden;
+      border: 1px solid rgba(32, 24, 19, 0.06);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .kpi-card::before {
+      display: none;
+    }
+
+    .kpi-engagement {
+      background: linear-gradient(180deg, rgba(255, 245, 240, 0.96), rgba(255, 255, 255, 0.92));
+    }
+
+    .kpi-mentions {
+      background: linear-gradient(180deg, rgba(246, 240, 255, 0.96), rgba(255, 255, 255, 0.92));
+    }
+
+    .kpi-reach {
+      background: linear-gradient(180deg, rgba(239, 245, 255, 0.96), rgba(255, 255, 255, 0.92));
+    }
+
+    .kpi-risk {
+      background: linear-gradient(180deg, rgba(255, 248, 232, 0.96), rgba(255, 255, 255, 0.92));
+    }
+
+    .kpi-icon {
+      display: none;
+    }
+
+    .kpi-label {
+      margin-bottom: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+      color: var(--ink-3);
+    }
+
+    .kpi-value {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(24px, 2.2vw, 34px);
+      line-height: 1;
+      letter-spacing: -0.05em;
+      margin-bottom: 10px;
+    }
+
+    .kpi-card.kpi-risk .kpi-value {
+      font-size: clamp(22px, 2vw, 30px);
+      line-height: 1.05;
+    }
+
+    .kpi-sub {
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--ink-2);
+    }
+
+    .kpi-trend-up {
+      color: var(--brand);
+      font-weight: 700;
+    }
+
+    .hero-alert {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+      gap: 18px;
+      padding: 22px 24px;
+      margin-bottom: 20px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.88));
+      border: 1px solid rgba(32, 24, 19, 0.06);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .alert-main {
+      display: block;
+      min-width: 0;
+    }
+
+    .alert-icon {
+      display: none;
+    }
+
+    .alert-kicker {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+      font-weight: 700;
+      color: var(--brand);
+      margin-bottom: 10px;
+    }
+
+    .alert-title {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(24px, 2.2vw, 32px);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+      margin-bottom: 10px;
+    }
+
+    .alert-copy {
+      color: var(--ink-2);
+      font-size: 13px;
+      line-height: 1.55;
+      max-width: 760px;
+    }
+
+    .alert-metrics {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .mini-stat {
+      background: rgba(250, 248, 245, 0.9);
+      border: 1px solid rgba(32, 24, 19, 0.05);
+      border-radius: 16px;
+      padding: 16px 18px;
+      display: block;
+    }
+
+    .mini-stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+      color: var(--ink-3);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .mini-stat-value {
+      font-family: "Syne", sans-serif;
+      font-size: 20px;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+    }
+
+    .card {
+      padding: 22px;
+      min-width: 0;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .card-title {
+      font-family: "Syne", sans-serif;
+      font-size: 19px;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+
+    .card-note {
+      max-width: 560px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--ink-3);
+    }
+
+    .chart-wrap,
+    .chart-wrap-sm,
+    .chart-wrap-lg {
+      position: relative;
+      width: 100%;
+      min-width: 0;
+      border-radius: 18px;
+      overflow: hidden;
+      padding: 10px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.24));
+      border: 1px solid rgba(32, 24, 19, 0.05);
+    }
+
+    .chart-wrap canvas,
+    .chart-wrap-sm canvas,
+    .chart-wrap-lg canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .chart-wrap {
+      height: 280px;
+    }
+
+    .chart-wrap-sm {
+      height: 220px;
+    }
+
+    .chart-wrap-lg {
+      height: 340px;
+    }
+
+    .sentiment-card {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .donut-shell {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      margin: 0 auto;
+    }
+
+    .donut-center {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .donut-center strong {
+      font-family: "Syne", sans-serif;
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: -0.05em;
+    }
+
+    .donut-center span {
+      display: block;
+      margin-top: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+
+    .legend-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    .legend-item strong {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .legend-item p {
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--ink-3);
+    }
+
+    .pillar-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .pillar-row {
+      display: grid;
+      grid-template-columns: minmax(120px, 160px) 1fr auto auto;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .pillar-name {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .bar-track {
+      position: relative;
+      width: 100%;
+      height: 11px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(32, 24, 19, 0.06);
+    }
+
+    .bar-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0;
+      border-radius: inherit;
+      transition: width 0.7s ease;
+    }
+
+    .bar-fill.red {
+      background: linear-gradient(90deg, #ff6a5f 0%, #df4d43 100%);
+    }
+
+    .bar-fill.amber {
+      background: linear-gradient(90deg, #f6ba4e 0%, #ca8b16 100%);
+    }
+
+    .bar-fill.green {
+      background: linear-gradient(90deg, #56cb88 0%, #2b8e5c 100%);
+    }
+
+    .pillar-pct {
+      font-weight: 700;
+      color: var(--ink-2);
+    }
+
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--grid-gap);
+    }
+
+    .pcard {
+      padding: 22px;
+      min-width: 0;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .pcard:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 48px rgba(31, 17, 8, 0.10);
+    }
+
+    .pcard-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .pcard-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      background: rgba(32, 24, 19, 0.05);
+      color: var(--ink-2);
+    }
+
+    .pcard-title {
+      font-family: "Syne", sans-serif;
+      font-size: 20px;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+
+    .sent-stack {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .sent-row {
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--ink-2);
+    }
+
+    .sent-mini {
+      position: relative;
+      height: 8px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(32, 24, 19, 0.06);
+    }
+
+    .sent-mini>span {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0;
+      border-radius: inherit;
+      transition: width 0.7s ease;
+    }
+
+    .pcard-copy {
+      padding-top: 14px;
+      border-top: 1px solid var(--line-2);
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--ink-2);
+    }
+
+    .channel-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .stat-chip {
+      min-width: 120px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.62);
+      border: 1px solid rgba(32, 24, 19, 0.06);
+    }
+
+    .stat-chip-label {
+      margin-bottom: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+
+    .stat-chip strong {
+      font-family: "Syne", sans-serif;
+      font-size: 18px;
+      letter-spacing: -0.04em;
+    }
+
+    .kw-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 12px;
+      align-items: center;
+      min-height: 220px;
+    }
+
+    .kw-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 14px;
+      border-radius: 999px;
+      line-height: 1;
+      background: rgba(32, 24, 19, 0.05);
+      color: var(--ink);
+      transition: transform 0.15s ease;
+    }
+
+    .kw-pill:hover {
+      transform: translateY(-1px);
+    }
+
+    .kw-bars {
+      display: grid;
+      gap: 12px;
+    }
+
+    .kw-bar-row {
+      display: grid;
+      grid-template-columns: minmax(90px, 150px) 1fr auto;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .kw-breakdown-wrap {
+      width: 100%;
+      overflow: auto;
+      border: 1px solid rgba(32, 24, 19, 0.06);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.62);
+    }
+
+    .kw-breakdown-table {
+      width: 100%;
+      min-width: 1180px;
+      border-collapse: collapse;
+    }
+
+    .kw-breakdown-table thead th {
+      text-align: left;
+      padding: 14px 16px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      border-bottom: 1px solid rgba(32, 24, 19, 0.08);
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .kw-breakdown-table tbody td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(32, 24, 19, 0.06);
+      vertical-align: middle;
+      font-size: 13px;
+      color: var(--ink-2);
+    }
+
+    .kw-breakdown-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .kw-key {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .kw-metric {
+      min-width: 260px;
+    }
+
+    .kw-metric-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .kw-track {
+      position: relative;
+      flex: 1;
+      height: 6px;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .kw-track.neg {
+      background: rgba(223, 77, 67, 0.16);
+    }
+
+    .kw-track.neu {
+      background: rgba(139, 99, 231, 0.16);
+    }
+
+    .kw-track.pos {
+      background: rgba(75, 123, 242, 0.16);
+    }
+
+    .kw-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0;
+      border-radius: 999px;
+    }
+
+    .kw-fill.neg {
+      background: #ef4444;
+    }
+
+    .kw-fill.neu {
+      background: #8b5cf6;
+    }
+
+    .kw-fill.pos {
+      background: #3b82f6;
+    }
+
+    .kw-num {
+      min-width: 22px;
+      text-align: right;
+      font-weight: 700;
+    }
+
+    .kw-num.neg {
+      color: #df4d43;
+    }
+
+    .kw-num.neu {
+      color: #8b63e7;
+    }
+
+    .kw-num.pos {
+      color: #3b82f6;
+    }
+
+    .kw-total {
+      font-weight: 700;
+      color: var(--ink-3);
+    }
+
+    .kw-dominant {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border: 1px solid transparent;
+    }
+
+    .kw-dominant.neg {
+      color: #df4d43;
+      background: rgba(223, 77, 67, 0.10);
+      border-color: rgba(223, 77, 67, 0.18);
+    }
+
+    .kw-dominant.neu {
+      color: #8b63e7;
+      background: rgba(139, 99, 231, 0.10);
+      border-color: rgba(139, 99, 231, 0.18);
+    }
+
+    .kw-dominant.pos {
+      color: #2b8e5c;
+      background: rgba(43, 142, 92, 0.10);
+      border-color: rgba(43, 142, 92, 0.18);
+    }
+
+    .table-shell {
+      width: 100%;
+      overflow: auto;
+      border-radius: 18px;
+      border: 1px solid rgba(32, 24, 19, 0.06);
+      background: rgba(255, 255, 255, 0.54);
+    }
+
+    .data-table {
+      width: 100%;
+      min-width: 620px;
+      border-collapse: collapse;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(32, 24, 19, 0.05);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .data-table th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      background: rgba(255, 255, 255, 0.76);
+    }
+
+    .data-table td {
+      font-size: 13px;
+      color: var(--ink-2);
+    }
+
+    .data-table tbody tr:hover td {
+      background: rgba(255, 255, 255, 0.45);
+    }
+
+    .insight-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .insight-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.60);
+      border: 1px solid rgba(32, 24, 19, 0.06);
+    }
+
+    .insight-item .ms {
+      color: var(--brand);
+      font-size: 18px;
+      margin-top: 1px;
+      flex-shrink: 0;
+    }
+
+    .insight-item strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+      color: var(--ink);
+    }
+
+    .insight-item p,
+    .insight-item a {
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--ink-2);
+      word-break: break-word;
+    }
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .filter-select,
+    .filter-search,
+    .modal-inp,
+    .ai-input {
+      min-height: 44px;
+      padding: 0 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(32, 24, 19, 0.08);
+      background: rgba(255, 255, 255, 0.76);
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .filter-select:focus,
+    .filter-search:focus,
+    .modal-inp:focus,
+    .ai-input:focus {
+      border-color: rgba(255, 90, 31, 0.42);
+      box-shadow: 0 0 0 4px rgba(255, 90, 31, 0.08);
+    }
+
+    .filter-search {
+      min-width: 260px;
+      flex: 1;
+    }
+
+    .signal-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .sig-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: start;
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(32, 24, 19, 0.06);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sig-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .sig-title {
+      font-family: "Syne", sans-serif;
+      font-size: 20px;
+      line-height: 1.12;
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+
+    .sig-meta,
+    .sig-copy,
+    .sig-url {
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--ink-2);
+    }
+
+    .sig-side {
+      min-width: 160px;
+      display: grid;
+      gap: 8px;
+      justify-items: end;
+    }
+
+    .sig-reach {
+      font-family: "Syne", sans-serif;
+      font-size: 26px;
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    .loading-shell {
+      min-height: 50vh;
+      display: grid;
+      place-items: center;
+    }
+
+    .loading-card {
+      min-width: min(380px, 90vw);
+      padding: 34px 28px;
+      text-align: center;
+    }
+
+    .empty-state {
+      min-height: 160px;
+      padding: 20px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      font-size: 13px;
+      color: var(--ink-3);
+      border-radius: 18px;
+      border: 1px dashed rgba(32, 24, 19, 0.12);
+      background: rgba(255, 255, 255, 0.42);
+    }
+
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(23, 16, 12, 0.46);
+      backdrop-filter: blur(5px);
+      z-index: 40;
+    }
+
+    .modal-box {
+      width: min(480px, 100%);
+      padding: 28px;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      background: linear-gradient(180deg, #ffffff, #fbf7f2);
+      box-shadow: 0 30px 80px rgba(31, 17, 8, 0.22);
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+
+    .modal-title {
+      font-family: "Syne", sans-serif;
+      font-size: 26px;
+      line-height: 1.06;
+      letter-spacing: -0.04em;
+      margin-bottom: 6px;
+    }
+
+    .modal-desc {
+      margin-bottom: 18px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--ink-2);
+    }
+
+    .modal-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .ml {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+
+    textarea.modal-inp {
+      height: 100px;
+      padding-top: 12px;
+      resize: vertical;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-soft,
+    .modal-btn.soft {
+      background: rgba(32, 24, 19, 0.05);
+      color: var(--ink);
+      border: 1px solid rgba(32, 24, 19, 0.06);
+    }
+
+    .btn-primary,
+    .modal-btn.primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--brand) 0%, #ff7f35 100%);
+      box-shadow: 0 14px 26px rgba(255, 90, 31, 0.22);
+    }
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      color: #fff;
+      background: rgba(32, 24, 19, 0.95);
+      box-shadow: var(--shadow-md);
+      z-index: 45;
+    }
+
+    .ai-fab {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 46;
+      height: 58px;
+      padding: 0 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      border-radius: 999px;
+      color: #fff;
+      background: linear-gradient(145deg, rgba(34, 24, 19, 0.96), rgba(70, 44, 27, 0.96));
+      box-shadow: 0 18px 44px rgba(31, 17, 8, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .ai-fab-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.10);
+      flex-shrink: 0;
+    }
+
+    .ai-fab-label {
+      font-family: "Syne", sans-serif;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    .ai-drawer {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      bottom: 96px;
+      width: min(380px, calc(100vw - 36px));
+      display: flex;
+      flex-direction: column;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(251, 247, 242, 0.94));
+      box-shadow: 0 28px 80px rgba(31, 17, 8, 0.18);
+      transform: translateX(calc(100% + 28px));
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.24s ease, opacity 0.24s ease;
+      z-index: 45;
+      overflow: hidden;
+    }
+
+    .ai-drawer.open {
+      transform: translateX(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .ai-drawer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid rgba(32, 24, 19, 0.06);
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .ai-drawer-title {
+      font-family: "Syne", sans-serif;
+      font-size: 22px;
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+    }
+
+    .ai-drawer-sub {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--ink-3);
+    }
+
+    .ai-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      background: rgba(32, 24, 19, 0.05);
+    }
+
+    .ai-drawer-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.60), rgba(247, 242, 236, 0.58));
+    }
+
+    .ai-msg {
+      max-width: 88%;
+      padding: 14px 16px;
+      line-height: 1.65;
+      border-radius: 18px;
+      font-size: 13px;
+    }
+
+    .ai-msg.bot {
+      align-self: flex-start;
+      background: rgba(32, 24, 19, 0.06);
+      color: var(--ink-2);
+      border-radius: 18px 18px 18px 8px;
+    }
+
+    .ai-msg.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--brand) 0%, #ff7f35 100%);
+      color: #fff;
+      border-radius: 18px 18px 8px 18px;
+    }
+
+    .ai-drawer-actions {
+      padding: 12px 18px 0;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: rgba(255, 255, 255, 0.86);
+    }
+
+    .ai-chip {
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: rgba(32, 24, 19, 0.05);
+      color: var(--ink-2);
+      border: 1px solid rgba(32, 24, 19, 0.06);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .ai-drawer-foot {
+      padding: 14px 18px 18px;
+      display: flex;
+      gap: 10px;
+      border-top: 1px solid rgba(32, 24, 19, 0.06);
+      background: rgba(255, 255, 255, 0.88);
+    }
+
+    .ai-input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .auth-gate {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(255, 90, 31, 0.12), transparent 26%),
+        radial-gradient(circle at 84% 78%, rgba(241, 198, 79, 0.12), transparent 24%),
+        linear-gradient(135deg, var(--bg-0) 0%, var(--bg-1) 38%, var(--bg-2) 100%);
+      overflow: hidden;
+      z-index: 80;
+    }
+
+    .auth-bg-orb {
+      position: absolute;
+      border-radius: 999px;
+      pointer-events: none;
+      filter: blur(10px);
+    }
+
+    .auth-bg-orb-1 {
+      width: 340px;
+      height: 340px;
+      top: -120px;
+      right: -40px;
+      background: rgba(255, 90, 31, 0.12);
+    }
+
+    .auth-bg-orb-2 {
+      width: 280px;
+      height: 280px;
+      left: 6%;
+      bottom: -80px;
+      background: rgba(241, 198, 79, 0.10);
+    }
+
+    .auth-shell {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 1120px;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .auth-brand-panel {
+      min-height: 620px;
+      padding: 42px;
+      border-radius: var(--radius-xl);
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
+        linear-gradient(135deg, rgba(255, 90, 31, 0.10), rgba(255, 255, 255, 0.02));
+      border: 1px solid var(--line-3);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-lg);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .auth-brand-panel::before {
+      content: "";
+      position: absolute;
+      inset: auto -80px -120px auto;
+      width: 280px;
+      height: 280px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.10), transparent 68%);
+      pointer-events: none;
+    }
+
+    .auth-brand-top {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .auth-logo-wrap {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--brand) 0%, #ff7a2d 100%);
+      box-shadow: 0 18px 32px rgba(255, 90, 31, 0.24);
+      flex-shrink: 0;
+    }
+
+    .auth-logo-mark {
+      font-family: "Syne", sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+      color: #fff;
+      text-transform: lowercase;
+    }
+
+    .auth-brand-name {
+      font-family: "Syne", sans-serif;
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: -0.05em;
+    }
+
+    .auth-brand-sub {
+      margin-top: 4px;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.68);
+      letter-spacing: 0.02em;
+    }
+
+    .auth-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 0 16px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.80);
+      width: fit-content;
+      margin-bottom: 20px;
+    }
+
+    .auth-heading {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(36px, 4vw, 56px);
+      line-height: 0.96;
+      letter-spacing: -0.06em;
+      max-width: 560px;
+      margin-bottom: 16px;
+    }
+
+    .auth-description {
+      max-width: 540px;
+      font-size: 16px;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.74);
+    }
+
+    .auth-feature-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .auth-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .auth-feature .ms {
+      color: var(--brand-2);
+      font-size: 18px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .auth-card {
+      padding: 34px 30px;
+      border-radius: var(--radius-xl);
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      box-shadow: var(--shadow-lg);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 620px;
+    }
+
+    .auth-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 0 16px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.84);
+      width: fit-content;
+      margin-bottom: 22px;
+    }
+
+    .auth-title {
+      font-family: "Syne", sans-serif;
+      font-size: 36px;
+      line-height: 0.98;
+      letter-spacing: -0.05em;
+      margin-bottom: 12px;
+    }
+
+    .auth-copy {
+      font-size: 14px;
+      line-height: 1.75;
+      color: rgba(255, 255, 255, 0.74);
+      margin-bottom: 28px;
+      max-width: 420px;
+    }
+
+    .auth-form {
+      display: grid;
+      gap: 16px;
+    }
+
+    .auth-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.70);
+    }
+
+    .auth-input {
+      width: 100%;
+      height: 52px;
+      padding: 0 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .auth-input::placeholder {
+      color: rgba(255, 255, 255, 0.42);
+    }
+
+    .auth-input:focus {
+      border-color: rgba(255, 90, 31, 0.48);
+      box-shadow: 0 0 0 4px rgba(255, 90, 31, 0.10);
+      background: rgba(255, 255, 255, 0.10);
+    }
+
+    .auth-error {
+      min-height: 20px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #ffb4a8;
+    }
+
+    .auth-submit {
+      height: 54px;
+      padding: 0 18px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--brand) 0%, #ff7d31 100%);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      box-shadow: 0 18px 34px rgba(255, 90, 31, 0.24);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .auth-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 22px 40px rgba(255, 90, 31, 0.28);
+    }
+
+    @media (max-width: 1440px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .pillars-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .hero-alert,
+      .auth-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .auth-brand-panel,
+      .auth-card {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 1120px) {
+      :root {
+        --sidebar-w: 76px;
+      }
+
+      .grid-2,
+      .pillars-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sentiment-card {
+        grid-template-columns: 1fr;
+      }
+
+      .workspace-top,
+      .content-scroll {
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+
+      .hero {
+        padding: 20px 22px;
+      }
+
+      .hero-meta {
+        min-width: 0;
+        align-items: flex-start;
+      }
+
+      .hero-actions {
+        justify-content: flex-start;
+      }
+
+      .pillar-row {
+        grid-template-columns: minmax(100px, 140px) 1fr auto;
+      }
+
+      .pillar-row .badge {
+        grid-column: 2 / 4;
+        justify-self: start;
+      }
+
+      .sig-item {
+        grid-template-columns: 1fr;
+      }
+
+      .sig-side {
+        justify-items: start;
+        min-width: 0;
+      }
+
+      .ai-drawer {
+        top: 16px;
+        right: 16px;
+        bottom: 88px;
+        width: min(360px, calc(100vw - 32px));
+      }
+    }
+
+    @media (max-width: 820px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 12px;
+        top: 12px;
+        bottom: 12px;
+        width: 64px;
+        border-radius: 24px;
+        padding: 12px 10px;
+        background: rgba(34, 24, 19, 0.92);
+      }
+
+      .workspace {
+        padding-left: 88px;
+      }
+
+      .workspace-top {
+        padding-top: 18px;
+      }
+
+      .content-scroll {
+        padding-top: 18px;
+      }
+
+      .hero-title {
+        font-size: 28px;
+      }
+
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-search {
+        min-width: 100%;
+      }
+
+      .auth-gate {
+        padding: 18px;
+      }
+
+      .auth-brand-panel,
+      .auth-card {
+        padding: 26px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .workspace {
+        padding-left: 0;
+      }
+
+      .sidebar {
+        left: 14px;
+        right: 14px;
+        top: auto;
+        bottom: 14px;
+        width: auto;
+        height: 68px;
+        border-radius: 22px;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        padding: 8px 12px;
+      }
+
+      .sb-logo,
+      .sb-divider,
+      .sb-bottom {
+        display: none;
+      }
+
+      .sb-nav {
+        flex-direction: row;
+        justify-content: center;
+        margin: 0;
+      }
+
+      .workspace-top {
+        padding: 16px 16px 0;
+      }
+
+      .content-scroll {
+        padding: 16px 16px 92px;
+      }
+
+      .hero,
+      .card,
+      .kpi-card,
+      .hero-alert,
+      .modal-box,
+      .auth-brand-panel,
+      .auth-card,
+      .ai-drawer {
+        border-radius: 22px;
+      }
+
+      .kw-bar-row,
+      .pillar-row,
+      .sent-row {
+        grid-template-columns: 1fr;
+      }
+
+      .table-shell,
+      .kw-breakdown-wrap {
+        border-radius: 16px;
+      }
+
+      .auth-heading {
+        font-size: 34px;
+      }
+
+      .auth-title {
+        font-size: 30px;
+      }
+
+      .ai-fab {
+        right: 16px;
+        bottom: 16px;
+        height: 54px;
+        padding: 0 16px;
+      }
+
+      .ai-drawer {
+        top: 12px;
+        right: 12px;
+        left: 12px;
+        bottom: 82px;
+        width: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- AUTH GATE -->
+  <div id="authGate" class="auth-gate">
+    <div class="auth-bg-orb auth-bg-orb-1"></div>
+    <div class="auth-bg-orb auth-bg-orb-2"></div>
+
+    <div class="auth-shell">
+      <section class="auth-brand-panel">
+        <div>
+          <div class="auth-brand-top">
+            <div class="auth-logo-wrap">
+              <div class="auth-logo-mark">a</div>
+            </div>
+            <div>
+              <div class="auth-brand-sub">LATAM Sentiment Access</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="auth-kicker">
+            <span class="dot-live"></span>
+            <span>Restricted intelligence access</span>
+          </div>
+
+          <h1 class="auth-heading">LATAM Sentiment Intelligence</h1>
+          <p class="auth-description">
+            Monitor how the United States is perceived across LATAM through narrative risk,
+            channel behavior, search visibility, emerging signals and sentiment movement.
+          </p>
+
+          <div class="auth-feature-list">
+            <div class="auth-feature">
+              <span class="ms msf">monitoring</span>
+              <span>Cross-channel monitoring across media, public conversation, video signals, search demand and
+                intelligence data.</span>
+            </div>
+            <div class="auth-feature">
+              <span class="ms msf">query_stats</span>
+              <span>Executive visibility into high-risk pillars, sentiment shifts and narrative spikes.</span>
+            </div>
+            <div class="auth-feature">
+              <span class="ms msf">public</span>
+              <span>Built to understand how LATAM conversations shape perception around the United States.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="auth-card">
+        <div class="auth-chip">
+          <span class="dot-live"></span>
+        </div>
+
+        <h2 class="auth-title">Sign in</h2>
+
+        <div class="auth-form">
+          <div>
+            <label class="auth-label" for="loginEmail">Work email</label>
+            <input id="loginEmail" class="auth-input" type="email" placeholder="name@antpack.co" />
+          </div>
+
+          <div>
+            <label class="auth-label" for="loginPassword">Password</label>
+            <input id="loginPassword" class="auth-input" type="password" placeholder="Enter your password" />
+          </div>
+
+          <div id="loginError" class="auth-error" style="display:none;"></div>
+
+          <button class="auth-submit" type="button" onclick="handleLogin()">
+            <span class="ms msf">lock_open</span>
+            <span>Enter dashboard</span>
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="appRoot" style="display:none;">
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sb-logo">
+          <span class="ms msf" style="color:#fff;font-size:20px;">satellite_alt</span>
+        </div>
+
+        <div class="sb-nav">
+          <button class="sb-btn active" id="sb-overview" onclick="switchPanel('overview')">
+            <span class="ms">dashboard</span>
+            <span class="sb-tooltip">Overview</span>
+          </button>
+
+          <button class="sb-btn" id="sb-narratives" onclick="switchPanel('narratives')">
+            <span class="ms">forum</span>
+            <span class="sb-tooltip">Narratives</span>
+          </button>
+
+          <button class="sb-btn" id="sb-content" onclick="switchPanel('content')">
+            <span class="ms">newspaper</span>
+            <span class="sb-tooltip">Signals</span>
+          </button>
+
+          <div class="sb-divider"></div>
+
+          <button class="sb-btn" onclick="openModal()">
+            <span class="ms">description</span>
+            <span class="sb-tooltip">Request report</span>
+          </button>
+        </div>
+
+        <div class="sb-bottom">
+          <button class="sb-btn" onclick="logoutAccess()">
+            <span class="ms">logout</span>
+            <span class="sb-tooltip">Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      <div class="workspace">
+        <div class="workspace-top">
+          <section class="hero">
+            <div class="hero-copy">
+              <h1 class="hero-title">ANTENNA</h1>
+            </div>
+
+            <div class="hero-meta">
+              <div class="hero-actions">
+                <button class="chip-btn" onclick="openModal()">
+                  <span class="ms">download</span>
+                  <span>Request report</span>
+                </button>
+
+                <button class="chip-btn" onclick="logoutAccess()">
+                  <span class="ms">logout</span>
+                  <span>Logout</span>
+                </button>
+              </div>
+
+              <div class="hero-status">
+                <span class="dot-live"></span>
+                <span id="loadingIndicator" style="display:none;align-items:center;gap:8px;">
+                  <span class="spinner" style="width:14px;height:14px;border-width:2px;margin:0;"></span>
+                  <span>Loading...</span>
+                </span>
+                <span id="lastRefresh">—</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <main class="content-scroll" id="mainContent">
+          <div id="globalLoading" class="loading-shell">
+            <div class="loading-card surface">
+              <div class="spinner"></div>
+              <div class="syne" style="font-size:22px;letter-spacing:-.03em;margin-bottom:8px;">Loading intelligence
+                data...</div>
+              <p style="color:var(--ink-3);line-height:1.6;">Please wait while the dashboard connects with the latest
+                monitoring sources.</p>
+            </div>
+          </div>
+
+          <!-- OVERVIEW -->
+          <section id="panel-overview" class="panel">
+            <div class="kpi-grid">
+              <article class="kpi-card surface kpi-engagement">
+                <div class="kpi-label">Total engagement</div>
+                <div class="kpi-value" id="k1">—</div>
+                <div class="kpi-sub" id="k1s">—</div>
+              </article>
+
+              <article class="kpi-card surface kpi-mentions">
+                <div class="kpi-label">Total mentions</div>
+                <div class="kpi-value" id="k2">—</div>
+                <div class="kpi-sub">12-month analyzed signals</div>
+              </article>
+
+              <article class="kpi-card surface kpi-reach">
+                <div class="kpi-label">Total reach</div>
+                <div class="kpi-value" id="k3">—</div>
+                <div class="kpi-sub">Estimated exposure across sources</div>
+              </article>
+
+              <article class="kpi-card surface kpi-risk">
+                <div class="kpi-label">Highest risk pillar</div>
+                <div class="kpi-value" id="k4">—</div>
+                <div class="kpi-sub" id="k4s">—</div>
+              </article>
+            </div>
+
+            <section class="hero-alert surface">
+              <div class="alert-main">
+                <div>
+                  <div class="alert-kicker">Narrative threat assessment</div>
+                  <h2 class="alert-title" id="threatHeadline">Loading situation summary...</h2>
+                  <p class="alert-copy" id="threatSub"></p>
+                </div>
+              </div>
+
+              <div class="alert-metrics">
+                <div class="mini-stat">
+                  <div class="mini-stat-label">Threat level</div>
+                  <div class="mini-stat-value" id="threatLvlText">—</div>
+                </div>
+
+                <div class="mini-stat">
+                  <div class="mini-stat-label">Sentiment mix</div>
+                  <div id="threatMiniSent" style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;"></div>
+                </div>
+              </div>
+            </section>
+
+            <div class="grid-2">
+              <article class="card surface">
+                <div class="card-head">
+                  <div>
+                    <div class="card-title">Global sentiment mix</div>
+                    <div class="card-note">A quick view of the overall emotional balance across all analyzed mentions.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="sentiment-card">
+                  <div class="donut-shell">
+                    <canvas id="donutChart" role="img"></canvas>
+                    <div class="donut-center">
+                      <div>
+                        <strong id="donutCenter">—</strong>
+                        <span>Neutral</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="legend-stack" id="donutLegend"></div>
+                </div>
+              </article>
+
+              <article class="card surface">
+                <div class="card-head">
+                  <div>
+                    <div class="card-title">Mention volume trend</div>
+                    <div class="card-note">Conversation intensity over time using the normalized timeline from the
+                      merged signal feed.</div>
+                  </div>
+                </div>
+
+                <div class="chart-wrap-sm">
+                  <canvas id="trendChart"></canvas>
+                </div>
+              </article>
+            </div>
+
+            <div class="grid-2">
+              <article class="card surface">
+                <div class="card-head">
+                  <div>
+                    <div class="card-title">Threat level by pillar</div>
+                    <div class="card-note">Negative sentiment concentration across each strategic conversation area.
+                    </div>
+                  </div>
+                </div>
+                <div class="pillar-list" id="pillarBars"></div>
+              </article>
+
+              <article class="card surface">
+                <div class="card-head">
+                  <div>
+                    <div class="card-title">Sentiment by pillar</div>
+                    <div class="card-note">Relative negative, neutral and positive distribution per pillar.</div>
+                  </div>
+                </div>
+                <div class="chart-wrap">
+                  <canvas id="stackedPillarChart"></canvas>
+                </div>
+              </article>
+            </div>
+
+            <div class="section-label">Pillar intelligence cards</div>
+            <div class="pillars-grid" id="pillarCards"></div>
+          </section>
+
+          <!-- NARRATIVES -->
+          <section id="panel-narratives" class="panel">
+            <div class="section-head">
+              <div>
+                <h2>Narratives & channels</h2>
+                <p>Topics shaping perception, which channels amplify them, and which terms dominate the conversation.
+                </p>
+              </div>
+            </div>
+
+            <article class="card surface" style="margin-bottom:24px;">
+              <div class="card-head">
+                <div>
+                  <div class="card-title">Channel comparison</div>
+                  <div class="card-note">Sentiment composition by source and relative contribution to the wider
+                    intelligence picture.</div>
+                </div>
+              </div>
+
+              <div class="chart-wrap">
+                <canvas id="channelChart"></canvas>
+              </div>
+              <div class="channel-stats" id="channelStats"></div>
+            </article>
+
+            <div class="grid-2">
+              <article class="card surface">
+                <div class="card-head">
+                  <div>
+                    <div class="card-title">Topic cloud</div>
+                    <div class="card-note">Large terms signal narrative centrality. Colors indicate how those terms skew
+                      emotionally.</div>
+                  </div>
+                </div>
+                <div class="kw-cloud" id="kwCloud"></div>
+              </article>
+
+              <article class="card surface">
+                <div class="card-head">
+                  <div>
+                    <div class="card-title">Top terms by frequency</div>
+                    <div class="card-note">The most repeated language patterns inside the merged signal stream.</div>
+                  </div>
+                </div>
+                <div class="kw-bars" id="kwBars"></div>
+              </article>
+            </div>
+
+            <article class="card surface" style="margin-bottom:24px;">
+              <div class="card-head">
+                <div>
+                  <div class="card-title">Keyword sentiment breakdown</div>
+                  <div class="card-note">How each top keyword skews across negative, neutral and positive signals.</div>
+                </div>
+              </div>
+              <div id="kwSent"></div>
+            </article>
+
+            <div class="grid-2">
+              <article class="card surface">
+                <div class="card-head">
+                  <div>
+                    <div class="card-title">SEO rankings — LATAM</div>
+                    <div class="card-note">Snapshot of the search landscape around tracked keywords and countries.</div>
+                  </div>
+                </div>
+                <div id="serpTable"></div>
+              </article>
+
+              <article class="card surface">
+                <div class="card-head">
+                  <div>
+                    <div class="card-title">Tech signals</div>
+                    <div class="card-note">Emerging technology conversations that could intersect with geopolitical
+                      narrative shifts.</div>
+                  </div>
+                </div>
+                <div class="insight-list" id="hnList"></div>
+              </article>
+            </div>
+          </section>
+
+          <!-- CONTENT -->
+          <section id="panel-content" class="panel">
+            <div class="section-head">
+              <div>
+                <h2>Content & key signals</h2>
+                <p>The content driving spikes, the signals with the highest exposure, and the feed that explains what
+                  happened.</p>
+              </div>
+            </div>
+
+            <article class="card surface" style="margin-bottom:24px;">
+              <div class="card-head">
+                <div>
+                  <div class="card-title">Conversation spike timeline</div>
+                  <div class="card-note">A clearer read of intensity spikes using total mentions over time and negative
+                    overlay.</div>
+                </div>
+              </div>
+              <div class="chart-wrap-lg">
+                <canvas id="spikeChart"></canvas>
+              </div>
+            </article>
+
+            <div class="section-head" style="margin-bottom:14px;">
+              <div>
+                <h2 style="font-size:20px;">Signal feed</h2>
+                <p>Top signals by reach, filterable by pillar, sentiment and source.</p>
+              </div>
+              <div class="section-actions">
+                <span class="badge b-gray" id="sigCount">0 signals</span>
+              </div>
+            </div>
+
+            <div class="filter-bar">
+              <select class="filter-select" id="fPilar" onchange="filterSig()">
+                <option value="">All pillars</option>
+                <option>Entertainment</option>
+                <option>Economy</option>
+                <option>Health</option>
+                <option>Gov / Politics</option>
+                <option>Culture</option>
+                <option>USA General</option>
+              </select>
+
+              <select class="filter-select" id="fSent" onchange="filterSig()">
+                <option value="">All sentiments</option>
+                <option value="Positive">Positive</option>
+                <option value="Negative">Negative</option>
+                <option value="Neutral">Neutral</option>
+              </select>
+
+              <select class="filter-select" id="fSrc" onchange="filterSig()">
+                <option value="">All sources</option>
+                <option value="Meltwater">Media Pulse</option>
+                <option value="Reddit">Public Talk</option>
+                <option value="YouTube">Video Signals</option>
+                <option value="News">News Pulse</option>
+              </select>
+
+              <input class="filter-search" id="fSearch" oninput="filterSig()"
+                placeholder="Search content, author or keyword..." />
+            </div>
+
+            <div class="signal-list" id="sigList"></div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- REQUEST REPORT MODAL -->
+  <div id="modalBg" class="modal-bg" onclick="if(event.target===this) closeModal()">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">Request intelligence report</div>
+          <div class="modal-desc">Fill in the details. Our analysts will prepare a deep-dive report and send it to your
+            email.</div>
+        </div>
+        <button class="btn btn-soft" type="button" onclick="closeModal()">
+          <span class="ms">close</span>
+        </button>
+      </div>
+
+      <div class="modal-grid">
+        <div>
+          <label class="ml">Topic / pillar</label>
+          <select id="mTopic" class="modal-inp">
+            <option>Gov / Politics — Iran-USA Conflict Narrative</option>
+            <option>USA General — Perception & Sentiment Drivers</option>
+            <option>Economy — Trade & Anti-US Narratives</option>
+            <option>Health — US Policy Perception in LATAM</option>
+            <option>Entertainment — Cultural Influence Analysis</option>
+            <option>Culture — Identity & Migration Narratives</option>
+            <option>Full Situation Report — All Pillars</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="ml">Your full name</label>
+          <input id="mName" class="modal-inp" placeholder="Jane Smith" />
+        </div>
+
+        <div>
+          <label class="ml">Your email</label>
+          <input id="mEmail" type="email" class="modal-inp" placeholder="you@antpack.co" />
+        </div>
+
+        <div>
+          <label class="ml">Priority</label>
+          <select id="mPriority" class="modal-inp">
+            <option>Routine (72 hrs)</option>
+            <option>Priority (24 hrs)</option>
+            <option>Urgent (Same day)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="ml">Specific question or angle (optional)</label>
+          <textarea id="mNotes" class="modal-inp" placeholder="What should the report focus on?"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn soft" type="button" onclick="closeModal()">Cancel</button>
+        <button id="modalSubmitBtn" class="modal-btn primary" type="button" onclick="submitModal()">
+          <span class="ms msf">send</span>
+          <span>Submit request</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI FAB -->
+  <button class="ai-fab" type="button" onclick="toggleAiDrawer()">
+    <span class="ai-fab-icon">
+      <span class="ms msf" style="font-size:20px;color:#fff;">smart_toy</span>
+    </span>
+    <span class="ai-fab-label">Ask AI Analyst</span>
+  </button>
+
+  <!-- AI DRAWER -->
+  <aside id="aiDrawer" class="ai-drawer">
+    <div class="ai-drawer-head">
+      <div>
+        <div class="ai-drawer-title">Ask AI Analyst</div>
+        <div class="ai-drawer-sub">Live narrative and sentiment context</div>
+      </div>
+      <button class="ai-close" type="button" onclick="toggleAiDrawer(false)">
+        <span class="ms">close</span>
+      </button>
+    </div>
+
+    <div class="ai-drawer-actions">
+      <button class="ai-chip" type="button" onclick="qa('What is the highest-risk narrative right now?')">Highest
+        risk</button>
+      <button class="ai-chip" type="button" onclick="qa('Which channel is amplifying the most negative sentiment?')">Top
+        channel</button>
+      <button class="ai-chip" type="button" onclick="qa('Give me a short executive summary.')">Exec summary</button>
+    </div>
+
+    <div id="aiMsgs" class="ai-drawer-body">
+      <div class="ai-msg bot">
+        Intelligence system online. Ask about risk pillars, narratives, channels, signal spikes or sentiment changes.
+      </div>
+    </div>
+
+    <div class="ai-drawer-foot">
+      <input id="aiInput" class="ai-input" placeholder="Ask the analyst..."
+        onkeydown="if(event.key==='Enter'){ sendAiMessage(); }" />
+      <button class="modal-btn primary" type="button" onclick="sendAiMessage()">
+        <span class="ms msf">send</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- TOAST -->
+  <div id="toastEl" class="toast">
+    <span class="ms msf" style="color:#67d391;font-size:18px;">check_circle</span>
+    <span id="toastMsg"></span>
+  </div>
+
+  <script>
+    var D = null;
+    var CHARTS = {};
+    var SOURCE_LABELS = {
+      meltwater: 'Media Pulse',
+      reddit: 'Public Talk',
+      youtube: 'Video Signals',
+      news: 'News Pulse',
+      trends: 'Search Demand',
+      hn: 'Tech Signals'
+    };
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function pp(value) {
+      return parseFloat(String(value || '0').replace(/[^\d.-]/g, '')) || 0;
+    }
+
+    function destroyChart(id) {
+      if (CHARTS[id]) {
+        CHARTS[id].destroy();
+        delete CHARTS[id];
+      }
+    }
+
+    function sourceLabel(raw) {
+      var key = String(raw || '').toLowerCase().trim();
+      return SOURCE_LABELS[key] || raw || 'Unknown';
+    }
+
+    function colorForStatus(status) {
+      if (status === 'HIGH RISK' || status === 'CRITICAL') return 'b-red';
+      if (status === 'WATCH' || status === 'HIGH') return 'b-amber';
+      if (status === 'MONITOR' || status === 'ELEVATED') return 'b-blue';
+      return 'b-green';
+    }
+
+    function badgeForPct(pct) {
+      if (pct >= 40) return { label: 'HIGH RISK', color: 'b-red', fill: 'red' };
+      if (pct >= 25) return { label: 'WATCH', color: 'b-amber', fill: 'amber' };
+      return { label: 'MONITOR', color: 'b-green', fill: 'green' };
+    }
+
+    function formatMonthLabel(key) {
+      var map = { '01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr', '05': 'May', '06': 'Jun', '07': 'Jul', '08': 'Aug', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec' };
+      if (!/^\d{4}-\d{2}$/.test(key)) return key;
+      var parts = key.split('-');
+      return map[parts[1]] + ' ' + parts[0];
+    }
+
+    function miniSentBlock(val, label, color) {
+      return '' +
+        '<div style="min-width:56px;text-align:center;">' +
+        '<div style="font-family:Syne,sans-serif;font-size:20px;line-height:1;letter-spacing:-.04em;color:' + color + ';">' + (val || 0).toFixed(0) + '%</div>' +
+        '<div style="margin-top:4px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;">' + label + '</div>' +
+        '</div>';
+    }
+
+    function legendItem(color, label, value, desc) {
+      return '' +
+        '<div class="legend-item">' +
+        '<span class="legend-dot" style="background:' + color + ';"></span>' +
+        '<div>' +
+        '<strong>' + escapeHtml(label) + ' <span style="color:' + color + ';">' + value.toFixed(1) + '%</span></strong>' +
+        '<p>' + escapeHtml(desc) + '</p>' +
+        '</div>' +
+        '</div>';
+    }
+
+    function sentMiniRow(label, value, color) {
+      return '' +
+        '<div class="sent-row">' +
+        '<span>' + escapeHtml(label) + '</span>' +
+        '<div class="sent-mini"><span data-width="' + (value || 0).toFixed(1) + '%" style="background:' + color + ';"></span></div>' +
+        '<strong>' + (value || 0).toFixed(1) + '%</strong>' +
+        '</div>';
+    }
+
+    function handleLogin() {
+      var email = (document.getElementById('loginEmail').value || '').trim().toLowerCase();
+      var password = (document.getElementById('loginPassword').value || '').trim();
+      var error = document.getElementById('loginError');
+
+      error.style.display = 'none';
+      error.textContent = '';
+
+      if (!email || !password) {
+        error.textContent = 'Please enter your email and password.';
+        error.style.display = 'block';
+        return;
+      }
+
+      if (!/@antpack\.co$/.test(email)) {
+        error.textContent = 'Access is restricted to @antpack.co accounts.';
+        error.style.display = 'block';
+        return;
+      }
+
+      if (password.length < 6) {
+        error.textContent = 'Password is required.';
+        error.style.display = 'block';
+        return;
+      }
+
+      sessionStorage.setItem('latamSentimentAccess', 'granted');
+      sessionStorage.setItem('latamSentimentUser', email);
+
+      document.getElementById('authGate').style.display = 'none';
+      document.getElementById('appRoot').style.display = 'block';
+
+      loadData();
+    }
+
+    function logoutAccess() {
+      sessionStorage.removeItem('latamSentimentAccess');
+      sessionStorage.removeItem('latamSentimentUser');
+
+      document.getElementById('appRoot').style.display = 'none';
+      document.getElementById('authGate').style.display = 'flex';
+      toggleAiDrawer(false);
+
+      var email = document.getElementById('loginEmail');
+      var pass = document.getElementById('loginPassword');
+      var error = document.getElementById('loginError');
+
+      if (email) email.value = '';
+      if (pass) pass.value = '';
+      if (error) {
+        error.textContent = '';
+        error.style.display = 'none';
+      }
+    }
+
+    function restoreSession() {
+      if (sessionStorage.getItem('latamSentimentAccess') === 'granted') {
+        document.getElementById('authGate').style.display = 'none';
+        document.getElementById('appRoot').style.display = 'block';
+        loadData();
+      } else {
+        document.getElementById('authGate').style.display = 'flex';
+        document.getElementById('appRoot').style.display = 'none';
+      }
+    }
+
+    function loadData() {
+      document.getElementById('globalLoading').style.display = 'grid';
+      document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
+      document.getElementById('loadingIndicator').style.display = 'inline-flex';
+      document.getElementById('lastRefresh').textContent = '—';
+
+      google.script.run
+        .withSuccessHandler(function (data) {
+          D = data;
+          document.getElementById('globalLoading').style.display = 'none';
+          document.getElementById('loadingIndicator').style.display = 'none';
+          document.getElementById('lastRefresh').textContent = 'Updated ' + new Date().toLocaleTimeString();
+
+          renderAll();
+          switchPanel('overview');
+        })
+        .withFailureHandler(function (err) {
+          document.getElementById('globalLoading').innerHTML =
+            '<div class="loading-card surface">' +
+            '<div class="syne" style="font-size:22px;letter-spacing:-.03em;margin-bottom:8px;color:#df4d43;">⚠ Error</div>' +
+            '<p style="color:var(--ink-2);line-height:1.7;">' + escapeHtml(err.message || 'Unknown error') + '</p>' +
+            '</div>';
+        })
+        .getDashboardData();
+    }
+
+    function switchPanel(name) {
+      document.querySelectorAll('.sb-btn[id^="sb-"]').forEach(function (btn) { btn.classList.remove('active'); });
+      document.querySelectorAll('.panel').forEach(function (panel) { panel.classList.remove('active'); });
+
+      var target = document.getElementById('panel-' + name);
+      if (target) target.classList.add('active');
+
+      var nav = document.getElementById('sb-' + name);
+      if (nav) nav.classList.add('active');
+
+      if (!D) return;
+
+      if (name === 'narratives') renderNarratives();
+      if (name === 'content') {
+        renderSpike();
+        filterSig();
+      }
+    }
+
+    function renderAll() {
+      renderKPIs();
+      renderThreatBanner();
+      renderDonut();
+      renderTrend();
+      renderPillarBars();
+      renderStackedPillars();
+      renderPillarCards();
+    }
+
+    function renderKPIs() {
+      if (!D || !D.summary) return;
+      var s = D.summary;
+      var e = s.kpis.totalEngagement || {};
+      var hr = s.kpis.highestRisk;
+
+      document.getElementById('k1').textContent = e.formatted || '—';
+      document.getElementById('k1s').innerHTML = e.variationFormatted
+        ? '<span class="kpi-trend-up">' + escapeHtml(e.variationFormatted) + '</span> vs prior period'
+        : 'vs prior period';
+
+      document.getElementById('k2').textContent = s.kpis.totalMentions.formatted || '—';
+      document.getElementById('k3').textContent = s.kpis.totalReach.formatted || '—';
+      document.getElementById('k4').textContent = hr ? hr.name : '—';
+      document.getElementById('k4s').textContent = hr ? hr.pct.toFixed(1) + '% negative sentiment' : '—';
+    }
+
+    function renderThreatBanner() {
+      if (!D || !D.summary || !D.summary.kpis.highestRisk) return;
+      var s = D.summary;
+      var hr = s.kpis.highestRisk;
+      var p = Object.values(s.pillars || {}).find(function (x) { return x.name === hr.name; });
+      var level = hr.pct >= 40 ? 'CRITICAL' : hr.pct >= 25 ? 'HIGH' : 'ELEVATED';
+
+      document.getElementById('threatHeadline').textContent =
+        hr.name + ' — ' + hr.pct.toFixed(1) + '% negative sentiment';
+
+      document.getElementById('threatSub').textContent =
+        'Total reach: ' + (s.kpis.totalReach.formatted || '—') +
+        ' · ' + (s.kpis.totalMentions.formatted || '—') + ' total mentions' +
+        ' · Engagement ' + ((s.kpis.totalEngagement && s.kpis.totalEngagement.formatted) || '—') +
+        (s.kpis.totalEngagement && s.kpis.totalEngagement.variationFormatted ? ' (' + s.kpis.totalEngagement.variationFormatted + ')' : '');
+
+      document.getElementById('threatLvlText').textContent = level;
+
+      if (p) {
+        document.getElementById('threatMiniSent').innerHTML =
+          miniSentBlock(p.negativePct, 'Neg', '#df4d43') +
+          miniSentBlock(p.neutralPct, 'Neu', '#8b63e7') +
+          miniSentBlock(p.positivePct, 'Pos', '#2b8e5c');
+      }
+    }
+
+    function renderDonut() {
+      if (!D || !D.summary) return;
+      var gs = D.summary.globalSentiment || {};
+      var neutral = pp(gs.neutral ? gs.neutral.pct : '0');
+      var negative = pp(gs.negative ? gs.negative.pct : '0');
+      var positive = pp(gs.positive ? gs.positive.pct : '0');
+      var notRated = pp(gs.not_rated ? gs.not_rated.pct : '0');
+
+      document.getElementById('donutCenter').textContent = neutral.toFixed(0) + '%';
+
+      destroyChart('donutChart');
+      CHARTS.donutChart = new Chart(document.getElementById('donutChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Neutral', 'Negative', 'Positive', 'Not rated'],
+          datasets: [{
+            data: [neutral, negative, positive, notRated],
+            backgroundColor: ['#8b63e7', '#df4d43', '#4b7bf2', '#d9d3cd'],
+            borderWidth: 0,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '72%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function (ctx) {
+                  return ' ' + ctx.label + ': ' + ctx.parsed.toFixed(1) + '%';
+                }
+              }
+            }
+          }
+        }
+      });
+
+      document.getElementById('donutLegend').innerHTML = [
+        legendItem('#8b63e7', 'Neutral', neutral, 'Mentions do not express a clear stance.'),
+        legendItem('#df4d43', 'Negative', negative, 'Criticism, concern or anti-US framing.'),
+        legendItem('#4b7bf2', 'Positive', positive, 'Support or favorable framing.')
+      ].join('');
+    }
+
+    function getTimelineEntries() {
+      if (!D || !D.articles || !D.articles.timeline) return [];
+      return Object.entries(D.articles.timeline)
+        .filter(function (entry) { return /^\d{4}-\d{2}$/.test(entry[0]); })
+        .sort(function (a, b) { return a[0] < b[0] ? -1 : 1; });
+    }
+
+    function baseChartOptions() {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            labels: {
+              usePointStyle: true,
+              boxWidth: 8,
+              boxHeight: 8,
+              color: '#5f564f',
+              font: { size: 11, family: 'DM Sans' }
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(32,24,19,0.92)',
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            padding: 10,
+            cornerRadius: 12,
+            displayColors: true
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false, drawBorder: false },
+            ticks: { color: '#8f857d', font: { size: 10, family: 'DM Sans' }, maxTicksLimit: 8 }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(32,24,19,0.08)', drawBorder: false },
+            ticks: { color: '#8f857d', font: { size: 10, family: 'DM Sans' } }
+          }
+        }
+      };
+    }
+
+    function renderTrend() {
+      var entries = getTimelineEntries();
+      var labels = entries.map(function (entry) { return formatMonthLabel(entry[0]); });
+      var totals = entries.map(function (entry) { return entry[1].total || 0; });
+      var negatives = entries.map(function (entry) { return entry[1].neg || 0; });
+
+      destroyChart('trendChart');
+      CHARTS.trendChart = new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Total',
+              data: totals,
+              borderColor: '#ff5a1f',
+              backgroundColor: 'rgba(255,90,31,0.10)',
+              fill: true,
+              pointRadius: 3,
+              pointHoverRadius: 4,
+              tension: 0.36,
+              borderWidth: 2
+            },
+            {
+              label: 'Negative',
+              data: negatives,
+              borderColor: '#df4d43',
+              backgroundColor: 'transparent',
+              fill: false,
+              pointRadius: 2,
+              pointHoverRadius: 3,
+              tension: 0.36,
+              borderWidth: 1.5,
+              borderDash: [5, 5]
+            }
+          ]
+        },
+        options: baseChartOptions()
+      });
+    }
+
+    function renderPillarBars() {
+      if (!D || !D.summary || !D.summary.pillars) return;
+      var order = ['usacol-govpol', 'usacol-health', 'usacol-general-usa-impact', 'usacol-economy', 'usacol-culture', 'usacol-entertainment'];
+      var html = '';
+
+      order.forEach(function (id) {
+        var p = D.summary.pillars[id];
+        if (!p) return;
+        var state = badgeForPct(p.negativePct);
+
+        html += '' +
+          '<div class="pillar-row">' +
+          '<div class="pillar-name">' + escapeHtml(p.name) + '</div>' +
+          '<div class="bar-track"><span class="bar-fill ' + state.fill + '" data-width="' + p.negativePct.toFixed(1) + '%"></span></div>' +
+          '<div class="pillar-pct">' + p.negativePct.toFixed(1) + '%</div>' +
+          '<span class="badge ' + state.color + '">' + state.label + '</span>' +
+          '</div>';
+      });
+
+      document.getElementById('pillarBars').innerHTML = html || '<div class="empty-state">No data available.</div>';
+
+      requestAnimationFrame(function () {
+        document.querySelectorAll('#pillarBars .bar-fill').forEach(function (el) {
+          el.style.width = el.getAttribute('data-width');
+        });
+      });
+    }
+
+    function renderStackedPillars() {
+      if (!D || !D.summary || !D.summary.pillars) return;
+      var order = ['usacol-govpol', 'usacol-entertainment', 'usacol-economy', 'usacol-culture', 'usacol-health', 'usacol-general-usa-impact'];
+      var labels = [];
+      var neg = [];
+      var neu = [];
+      var pos = [];
+
+      order.forEach(function (id) {
+        var p = D.summary.pillars[id];
+        if (!p) return;
+        labels.push(p.name);
+        neg.push(p.negativePct || 0);
+        neu.push(p.neutralPct || 0);
+        pos.push(p.positivePct || 0);
+      });
+
+      destroyChart('stackedPillarChart');
+      CHARTS.stackedPillarChart = new Chart(document.getElementById('stackedPillarChart'), {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Negative', data: neg, backgroundColor: '#df4d43', borderRadius: 8, barPercentage: 0.76, categoryPercentage: 0.7 },
+            { label: 'Neutral', data: neu, backgroundColor: '#b38cf0', borderRadius: 8, barPercentage: 0.76, categoryPercentage: 0.7 },
+            { label: 'Positive', data: pos, backgroundColor: '#7ea0ff', borderRadius: 8, barPercentage: 0.76, categoryPercentage: 0.7 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          interaction: { mode: 'index', intersect: false },
+          plugins: baseChartOptions().plugins,
+          scales: {
+            x: {
+              stacked: true,
+              beginAtZero: true,
+              max: 100,
+              grid: { color: 'rgba(32,24,19,0.08)', drawBorder: false },
+              ticks: {
+                color: '#8f857d',
+                callback: function (v) { return v + '%'; },
+                font: { size: 10, family: 'DM Sans' }
+              }
+            },
+            y: {
+              stacked: true,
+              grid: { display: false, drawBorder: false },
+              ticks: { color: '#5f564f', font: { size: 11, family: 'DM Sans' } }
+            }
+          }
+        }
+      });
+    }
+
+    function renderPillarCards() {
+      if (!D || !D.summary || !D.summary.pillars) return;
+      var order = ['usacol-govpol', 'usacol-general-usa-impact', 'usacol-entertainment', 'usacol-health', 'usacol-economy', 'usacol-culture'];
+      var html = '';
+
+      order.forEach(function (id) {
+        var p = D.summary.pillars[id];
+        if (!p) return;
+        var insightGroup = (D.summary.aiSummaries && D.summary.aiSummaries[id]) || { positive: [], negative: [] };
+        var insight = insightGroup.negative[0] || insightGroup.positive[0] || 'No additional narrative summary is available for this pillar.';
+
+        html += '' +
+          '<article class="pcard surface">' +
+          '<div class="pcard-top">' +
+          '<div><div class="pcard-icon"><span class="ms">' + escapeHtml(p.icon || 'public') + '</span></div></div>' +
+          '<span class="badge ' + colorForStatus(p.status) + '">' + escapeHtml(p.status) + '</span>' +
+          '</div>' +
+          '<div class="pcard-title">' + escapeHtml(p.name) + '</div>' +
+          '<div class="sent-stack">' +
+          sentMiniRow('Negative', p.negativePct, '#df4d43') +
+          sentMiniRow('Neutral', p.neutralPct, '#8b63e7') +
+          sentMiniRow('Positive', p.positivePct, '#4b7bf2') +
+          '</div>' +
+          '<div class="pcard-copy">' +
+          escapeHtml(insight) +
+          (p.engagement && p.engagement.formatted ? '<br><br><strong>Engagement:</strong> ' + escapeHtml(p.engagement.formatted) : '') +
+          '</div>' +
+          '</article>';
+      });
+
+      document.getElementById('pillarCards').innerHTML = html || '<div class="empty-state">No data available.</div>';
+
+      requestAnimationFrame(function () {
+        document.querySelectorAll('.sent-mini > span').forEach(function (el) {
+          el.style.width = el.getAttribute('data-width');
+        });
+      });
+    }
+
+    function renderNarratives() {
+      if (!D) return;
+      renderChannelChart();
+      renderKeywords();
+      renderKeywordSentimentTable();
+      renderSerpTable();
+      renderHnList();
+    }
+
+    function renderChannelChart() {
+      var rows = Object.entries(D.channels || {}).filter(function (entry) {
+        return entry[1] && typeof entry[1] === 'object' && entry[1].total;
+      });
+
+      var labels = rows.map(function (entry) {
+        return sourceLabel(entry[0]);
+      });
+
+      var neg = rows.map(function (entry) { return entry[1].total ? (entry[1].neg / entry[1].total) * 100 : 0; });
+      var neu = rows.map(function (entry) { return entry[1].total ? (entry[1].neu / entry[1].total) * 100 : 0; });
+      var pos = rows.map(function (entry) { return entry[1].total ? (entry[1].pos / entry[1].total) * 100 : 0; });
+
+      destroyChart('channelChart');
+      CHARTS.channelChart = new Chart(document.getElementById('channelChart'), {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Negative', data: neg, backgroundColor: '#df4d43', borderRadius: 10 },
+            { label: 'Neutral', data: neu, backgroundColor: '#b38cf0', borderRadius: 10 },
+            { label: 'Positive', data: pos, backgroundColor: '#7ea0ff', borderRadius: 10 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: baseChartOptions().plugins,
+          scales: {
+            x: {
+              stacked: true,
+              grid: { display: false, drawBorder: false },
+              ticks: { color: '#5f564f', font: { size: 11, family: 'DM Sans' } }
+            },
+            y: {
+              stacked: true,
+              beginAtZero: true,
+              max: 100,
+              grid: { color: 'rgba(32,24,19,0.08)', drawBorder: false },
+              ticks: {
+                color: '#8f857d',
+                callback: function (v) { return v + '%'; },
+                font: { size: 10, family: 'DM Sans' }
+              }
+            }
+          }
+        }
+      });
+
+      document.getElementById('channelStats').innerHTML = rows.map(function (entry) {
+        return '' +
+          '<div class="stat-chip">' +
+          '<div class="stat-chip-label">' + escapeHtml(sourceLabel(entry[0])) + '</div>' +
+          '<strong>' + entry[1].total + '</strong>' +
+          '</div>';
+      }).join('');
+    }
+
+    function buildKeywordStats() {
+      var stats = {};
+      ((D.articles && D.articles.all) || []).forEach(function (article) {
+        (article.keywords || []).forEach(function (word) {
+          if (!word) return;
+          if (!stats[word]) stats[word] = { count: 0, neg: 0, neu: 0, pos: 0 };
+          stats[word].count++;
+          var s = (article.sentiment || '').toLowerCase();
+          if (s.indexOf('neg') !== -1) stats[word].neg++;
+          else if (s.indexOf('pos') !== -1) stats[word].pos++;
+          else stats[word].neu++;
+        });
+      });
+      return stats;
+    }
+
+    function keywordTone(stat) {
+      if (!stat) return 'mixed';
+      var max = Math.max(stat.neg, stat.neu, stat.pos);
+      if (max === stat.neg) return 'neg';
+      if (max === stat.pos) return 'pos';
+      return 'neu';
+    }
+
+    function renderKeywords() {
+      var stats = buildKeywordStats();
+      var top = (D.articles && D.articles.topKeywords ? D.articles.topKeywords.slice(0, 24) : []);
+
+      if (!top.length) {
+        document.getElementById('kwCloud').innerHTML = '<div class="empty-state">No data available.</div>';
+        document.getElementById('kwBars').innerHTML = '<div class="empty-state">No data available.</div>';
+        return;
+      }
+
+      var max = top[0].count || 1;
+
+      document.getElementById('kwCloud').innerHTML = top.map(function (item) {
+        var tone = keywordTone(stats[item.word]);
+        var color = tone === 'neg' ? '#df4d43' : tone === 'pos' ? '#4b7bf2' : '#8b63e7';
+        var bg = tone === 'neg' ? 'rgba(223,77,67,.10)' : tone === 'pos' ? 'rgba(75,123,242,.11)' : 'rgba(139,99,231,.11)';
+        var size = 13 + Math.round((item.count / max) * 16);
+
+        return '<span class="kw-pill" style="font-size:' + size + 'px;color:' + color + ';background:' + bg + ';">' + escapeHtml(item.word) + '</span>';
+      }).join('');
+
+      var topBars = top.slice(0, 12);
+      document.getElementById('kwBars').innerHTML = topBars.map(function (item) {
+        var pct = (item.count / max) * 100;
+        return '' +
+          '<div class="kw-bar-row">' +
+          '<strong>' + escapeHtml(item.word) + '</strong>' +
+          '<div class="bar-track"><span class="bar-fill red" style="width:' + pct.toFixed(1) + '%;background:linear-gradient(90deg,#ff9b69 0%, #ff5a1f 100%);"></span></div>' +
+          '<span class="pillar-pct">' + item.count + '</span>' +
+          '</div>';
+      }).join('');
+    }
+
+    function renderKeywordSentimentTable() {
+      var stats = buildKeywordStats();
+
+      var rows = Object.keys(stats).map(function (word) {
+        return {
+          word: word,
+          neg: stats[word].neg || 0,
+          neu: stats[word].neu || 0,
+          pos: stats[word].pos || 0,
+          count: stats[word].count || 0
+        };
+      });
+
+      rows = rows
+        .sort(function (a, b) { return b.count - a.count; })
+        .slice(0, 15);
+
+      if (!rows.length) {
+        document.getElementById('kwSent').innerHTML = '<div class="empty-state">No data available.</div>';
+        return;
+      }
+
+      var maxNeg = Math.max.apply(null, rows.map(function (r) { return r.neg; }).concat([1]));
+      var maxNeu = Math.max.apply(null, rows.map(function (r) { return r.neu; }).concat([1]));
+      var maxPos = Math.max.apply(null, rows.map(function (r) { return r.pos; }).concat([1]));
+
+      function dominantType(r) {
+        if (r.neg >= r.neu && r.neg >= r.pos) return { key: 'neg', label: 'Negative' };
+        if (r.neu >= r.neg && r.neu >= r.pos) return { key: 'neu', label: 'Neutral' };
+        return { key: 'pos', label: 'Positive' };
+      }
+
+      var html = '' +
+        '<div class="kw-breakdown-wrap">' +
+        '<table class="kw-breakdown-table">' +
+        '<thead>' +
+        '<tr>' +
+        '<th>Keyword</th>' +
+        '<th>Negative mentions</th>' +
+        '<th>Neutral mentions</th>' +
+        '<th>Positive mentions</th>' +
+        '<th>Total</th>' +
+        '<th>Dominant</th>' +
+        '</tr>' +
+        '</thead>' +
+        '<tbody>';
+
+      rows.forEach(function (r) {
+        var negW = (r.neg / maxNeg) * 100;
+        var neuW = (r.neu / maxNeu) * 100;
+        var posW = (r.pos / maxPos) * 100;
+        var dom = dominantType(r);
+
+        html += '' +
+          '<tr>' +
+          '<td class="kw-key">' + escapeHtml(r.word) + '</td>' +
+
+          '<td class="kw-metric">' +
+          '<div class="kw-metric-row">' +
+          '<div class="kw-track neg"><span class="kw-fill neg" style="width:' + negW.toFixed(1) + '%;"></span></div>' +
+          '<span class="kw-num neg">' + r.neg + '</span>' +
+          '</div>' +
+          '</td>' +
+
+          '<td class="kw-metric">' +
+          '<div class="kw-metric-row">' +
+          '<div class="kw-track neu"><span class="kw-fill neu" style="width:' + neuW.toFixed(1) + '%;"></span></div>' +
+          '<span class="kw-num neu">' + r.neu + '</span>' +
+          '</div>' +
+          '</td>' +
+
+          '<td class="kw-metric">' +
+          '<div class="kw-metric-row">' +
+          '<div class="kw-track pos"><span class="kw-fill pos" style="width:' + posW.toFixed(1) + '%;"></span></div>' +
+          '<span class="kw-num pos">' + r.pos + '</span>' +
+          '</div>' +
+          '</td>' +
+
+          '<td class="kw-total">' + r.count + '</td>' +
+          '<td><span class="kw-dominant ' + dom.key + '">' + dom.label + '</span></td>' +
+          '</tr>';
+      });
+
+      html += '</tbody></table></div>';
+
+      document.getElementById('kwSent').innerHTML = html;
+    }
+
+    function renderSerpTable() {
+      var rows = (D.serp || []).slice(0, 10);
+
+      if (!rows.length) {
+        document.getElementById('serpTable').innerHTML = '<div class="empty-state">No data available.</div>';
+        return;
+      }
+
+      var html = '' +
+        '<div class="table-shell">' +
+        '<table class="data-table">' +
+        '<thead>' +
+        '<tr>' +
+        '<th>Keyword</th>' +
+        '<th>Country</th>' +
+        '<th>Position</th>' +
+        '<th>Title</th>' +
+        '</tr>' +
+        '</thead>' +
+        '<tbody>';
+
+      rows.forEach(function (row) {
+        html += '' +
+          '<tr>' +
+          '<td><strong style="color:var(--ink)">' + escapeHtml(row.keyword || '—') + '</strong></td>' +
+          '<td>' + escapeHtml(row.country || '—') + '</td>' +
+          '<td>' + escapeHtml(row.position || '—') + '</td>' +
+          '<td>' + (row.link
+            ? '<a href="' + escapeHtml(row.link) + '" target="_blank" rel="noopener noreferrer" style="color:var(--brand);font-weight:600;">' + escapeHtml(row.title || row.link) + '</a>'
+            : escapeHtml(row.title || '—')) + '</td>' +
+          '</tr>';
+      });
+
+      html += '</tbody></table></div>';
+      document.getElementById('serpTable').innerHTML = html;
+    }
+
+    function renderHnList() {
+      var rows = (D.hn || []).slice(0, 8);
+
+      if (!rows.length) {
+        document.getElementById('hnList').innerHTML = '<div class="empty-state">No data available.</div>';
+        return;
+      }
+
+      document.getElementById('hnList').innerHTML = rows.map(function (row) {
+        return '' +
+          '<div class="insight-item">' +
+          '<span class="ms">memory</span>' +
+          '<div>' +
+          '<strong>' + escapeHtml(row.title || '—') + '</strong>' +
+          '<p>' + escapeHtml((row.points || 0) + ' points · ' + (row.comments || 0) + ' comments') + '</p>' +
+          (row.url ? '<a href="' + escapeHtml(row.url) + '" target="_blank" rel="noopener noreferrer" style="margin-top:4px;display:inline-block;color:var(--brand);font-weight:600;">Open source</a>' : '') +
+          '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    function renderSpike() {
+      var entries = getTimelineEntries();
+      var labels = entries.map(function (entry) { return formatMonthLabel(entry[0]); });
+      var totals = entries.map(function (entry) { return entry[1].total || 0; });
+      var negatives = entries.map(function (entry) { return entry[1].neg || 0; });
+
+      destroyChart('spikeChart');
+      CHARTS.spikeChart = new Chart(document.getElementById('spikeChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Total',
+              data: totals,
+              borderColor: '#ff5a1f',
+              backgroundColor: 'rgba(255,90,31,0.12)',
+              fill: true,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              tension: 0.34,
+              borderWidth: 2.4
+            },
+            {
+              label: 'Negative',
+              data: negatives,
+              borderColor: '#df4d43',
+              backgroundColor: 'rgba(223,77,67,0.06)',
+              fill: true,
+              pointRadius: 2,
+              pointHoverRadius: 4,
+              tension: 0.34,
+              borderWidth: 1.6,
+              borderDash: [6, 6]
+            }
+          ]
+        },
+        options: baseChartOptions()
+      });
+    }
+
+    function filterSig() {
+      if (!D || !D.articles || !D.articles.all) return;
+
+      var pilar = document.getElementById('fPilar').value;
+      var sent = document.getElementById('fSent').value;
+      var src = document.getElementById('fSrc').value;
+      var search = document.getElementById('fSearch').value.toLowerCase().trim();
+
+      var rows = D.articles.all.filter(function (article) {
+        if (pilar && article.pilar !== pilar) return false;
+        if (sent && article.sentiment !== sent) return false;
+        if (src && article.fuente !== src) return false;
+
+        if (search) {
+          var hay = [
+            article.contenido,
+            article.autor,
+            article.handle,
+            article.pilar,
+            article.fuente,
+            (article.keywords || []).join(' ')
+          ].join(' ').toLowerCase();
+
+          if (hay.indexOf(search) === -1) return false;
+        }
+
+        return true;
+      });
+
+      document.getElementById('sigCount').textContent = rows.length + ' signals';
+
+      if (!rows.length) {
+        document.getElementById('sigList').innerHTML = '<div class="empty-state">No signals match the current filters.</div>';
+        return;
+      }
+
+      document.getElementById('sigList').innerHTML = rows.slice(0, 40).map(function (article) {
+        var toneClass = /neg/i.test(article.sentiment) ? 'b-red' : /pos/i.test(article.sentiment) ? 'b-blue' : 'b-plum';
+        var niceSource = sourceLabel(article.fuente);
+
+        return '' +
+          '<article class="sig-item">' +
+          '<div>' +
+          '<div class="sig-top">' +
+          '<div>' +
+          '<div class="sig-title">' + escapeHtml(article.contenido || '—') + '</div>' +
+          '<div class="sig-meta">' +
+          escapeHtml(article.autor || 'Unknown') +
+          (article.handle ? ' · ' + escapeHtml(article.handle) : '') +
+          ' · ' + escapeHtml(niceSource || '—') +
+          ' · ' + escapeHtml(article.pais || '—') +
+          (article.fecha ? ' · ' + escapeHtml(article.fecha) : '') +
+          '</div>' +
+          '</div>' +
+          '<span class="badge ' + toneClass + '">' + escapeHtml(article.sentiment || 'Neutral') + '</span>' +
+          '</div>' +
+          '<div class="sig-copy">' + escapeHtml((article.contenido || '').substring(0, 260)) + ((article.contenido || '').length > 260 ? '…' : '') + '</div>' +
+          '<div class="sig-meta" style="margin-top:10px;">' +
+          '<strong style="color:var(--ink)">' + escapeHtml(article.pilar || '—') + '</strong>' +
+          (article.keywords && article.keywords.length ? ' · ' + escapeHtml(article.keywords.slice(0, 5).join(', ')) : '') +
+          '</div>' +
+          (article.url ? '<a class="sig-url" href="' + escapeHtml(article.url) + '" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:10px;color:var(--brand);font-weight:600;">Open source ↗</a>' : '') +
+          '</div>' +
+          '<div class="sig-side">' +
+          '<div class="sig-reach">' + escapeHtml(article.reachFmt || '—') + '</div>' +
+          '<span class="badge b-gray">Reach</span>' +
+          (article.similares ? '<span class="badge b-gray">' + escapeHtml(String(article.similares)) + ' similar</span>' : '') +
+          '</div>' +
+          '</article>';
+      }).join('');
+    }
+
+    function openModal() {
+      document.getElementById('modalBg').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modalBg').style.display = 'none';
+    }
+
+    function submitModal() {
+      var name = document.getElementById('mName').value.trim();
+      var email = document.getElementById('mEmail').value.trim();
+
+      if (!name || !email) {
+        alert('Please fill in your name and email.');
+        return;
+      }
+
+      var payload = {
+        topic: document.getElementById('mTopic').value,
+        name: name,
+        email: email,
+        priority: document.getElementById('mPriority').value,
+        notes: document.getElementById('mNotes').value.trim()
+      };
+
+      var btn = document.getElementById('modalSubmitBtn');
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+
+      google.script.run
+        .withSuccessHandler(function () {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          closeModal();
+          showToast('Request submitted successfully.');
+          document.getElementById('mName').value = '';
+          document.getElementById('mEmail').value = '';
+          document.getElementById('mNotes').value = '';
+        })
+        .withFailureHandler(function () {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          showToast('There was a problem sending the request.');
+        })
+        .sendReportRequest(payload);
+    }
+
+    function showToast(message) {
+      var toast = document.getElementById('toastEl');
+      document.getElementById('toastMsg').textContent = message;
+      toast.style.display = 'inline-flex';
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(function () {
+        toast.style.display = 'none';
+      }, 2800);
+    }
+
+    function toggleAiDrawer(forceState) {
+      var drawer = document.getElementById('aiDrawer');
+      if (!drawer) return;
+
+      var shouldOpen = typeof forceState === 'boolean'
+        ? forceState
+        : !drawer.classList.contains('open');
+
+      drawer.classList.toggle('open', shouldOpen);
+
+      if (shouldOpen) {
+        setTimeout(function () {
+          var input = document.getElementById('aiInput');
+          if (input) input.focus();
+        }, 80);
+      }
+    }
+
+    function addAiBubble(who, html) {
+      var wrap = document.getElementById('aiMsgs');
+      if (!wrap) return null;
+
+      var el = document.createElement('div');
+      el.className = 'ai-msg ' + who;
+      el.innerHTML = html;
+      wrap.appendChild(el);
+      wrap.scrollTop = wrap.scrollHeight;
+      return el;
+    }
+
+    function buildCtx() {
+      if (!D) return 'No data available.';
+
+      var s = D.summary || {};
+      var pillars = Object.values(s.pillars || {}).map(function (p) {
+        return p.name + ': neg ' + p.negativePct.toFixed(1) + '% / neu ' + p.neutralPct.toFixed(1) + '% / pos ' + p.positivePct.toFixed(1) + '%';
+      }).join('\n');
+
+      var keywords = D.articles && D.articles.topKeywords
+        ? D.articles.topKeywords.slice(0, 15).map(function (k) { return k.word + ' (' + k.count + ')'; }).join(', ')
+        : '';
+
+      var channels = D.channels
+        ? Object.entries(D.channels)
+          .filter(function (entry) { return entry[1] && typeof entry[1] === 'object' && entry[1].total; })
+          .map(function (entry) {
+            var c = entry[1];
+            return sourceLabel(entry[0]) + ': ' + c.total + ' signals (' + (c.total ? Math.round((c.neg / c.total) * 100) : 0) + '% negative)';
+          }).join(', ')
+        : '';
+
+      var signals = D.articles && D.articles.all
+        ? D.articles.all.slice(0, 10).map(function (a) {
+          return '[' + sourceLabel(a.fuente) + '][' + a.pilar + '][' + a.sentiment + '] ' + (a.contenido || '').substring(0, 140);
+        }).join('\n')
+        : '';
+
+      return [
+        'You are a strategic intelligence analyst briefing an executive on LATAM sentiment about the United States.',
+        'Be direct, concise and specific. Use real numbers from the context.',
+        'TOTAL REACH: ' + ((s.kpis && s.kpis.totalReach && s.kpis.totalReach.formatted) || '—'),
+        'TOTAL MENTIONS: ' + ((s.kpis && s.kpis.totalMentions && s.kpis.totalMentions.formatted) || '—'),
+        'TOTAL ENGAGEMENT: ' + ((s.kpis && s.kpis.totalEngagement && s.kpis.totalEngagement.formatted) || '—'),
+        'PILLARS:\n' + pillars,
+        'CHANNELS: ' + channels,
+        'TOP KEYWORDS: ' + keywords,
+        'SAMPLE SIGNALS:\n' + signals
+      ].join('\n\n');
+    }
+
+    function qa(question) {
+      toggleAiDrawer(true);
+      var input = document.getElementById('aiInput');
+      if (!input) return;
+      input.value = question;
+      sendAiMessage();
+    }
+
+    function sendAiMessage() {
+      var input = document.getElementById('aiInput');
+      var q = (input && input.value || '').trim();
+      if (!q) return;
+
+      input.value = '';
+      addAiBubble('user', escapeHtml(q));
+
+      var typing = addAiBubble(
+        'bot',
+        '<div style="display:flex;align-items:center;gap:8px;">' +
+        '<div class="spinner" style="width:14px;height:14px;border-width:2px;margin:0;"></div>' +
+        '<span>Analyzing...</span>' +
+        '</div>'
+      );
+
+      google.script.run
+        .withSuccessHandler(function (response) {
+          if (typing) typing.remove();
+          addAiBubble('bot', String(response || '').replace(/\n/g, '<br>'));
+        })
+        .withFailureHandler(function (err) {
+          if (typing) typing.remove();
+          addAiBubble('bot', '⚠ ' + escapeHtml(err.message || 'Unknown error'));
+        })
+        .askGemini(q, buildCtx());
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      restoreSession();
+
+      var loginPassword = document.getElementById('loginPassword');
+      if (loginPassword) {
+        loginPassword.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter') handleLogin();
+        });
+      }
+
+      var loginEmail = document.getElementById('loginEmail');
+      if (loginEmail) {
+        loginEmail.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter') handleLogin();
+        });
+      }
+
+      var aiInput = document.getElementById('aiInput');
+      if (aiInput) {
+        aiInput.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter') sendAiMessage();
+        });
+      }
+
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          closeModal();
+          toggleAiDrawer(false);
+        }
+      });
+    });
+  </script>
+</body>
