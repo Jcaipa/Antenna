@@ -20,41 +20,41 @@ from database import (
 
 router = APIRouter(prefix="/api/runner", tags=["runner"])
 
-BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 SCRIPT_MAP = {
     # Social Listening
-    "social_news":    os.path.join(BASE, "Social_listening", "google_news.py"),
-    "social_reddit":  os.path.join(BASE, "Social_listening", "reddit.py"),
-    "social_youtube": os.path.join(BASE, "Social_listening", "youtube.py"),
+    "social_news":    os.path.join(BASE, "services", "social",       "google_news.py"),
+    "social_reddit":  os.path.join(BASE, "services", "social",       "reddit.py"),
+    "social_youtube": os.path.join(BASE, "services", "social",       "youtube.py"),
     # Trends Engine
-    "trends":         os.path.join(BASE, "Trends Engine",    "google_trends.py"),
-    "hacker_news":    os.path.join(BASE, "Trends Engine",    "hacker_news.py"),
+    "trends":         os.path.join(BASE, "services", "trends",       "google_trends.py"),
+    "hacker_news":    os.path.join(BASE, "services", "trends",       "hacker_news.py"),
     # Competitive Intelligence
-    "competitive":    os.path.join(BASE, "Competitive Intelligence", "competitor_monitor.py"),
+    "competitive":    os.path.join(BASE, "services", "competitive",  "competitor_monitor.py"),
     # SEO / AEO
-    "seo":            os.path.join(BASE, "SEO / AEO", "serp_rankings.py"),
+    "seo":            os.path.join(BASE, "services", "seo",          "serp_rankings.py"),
     # Paid Signals
-    "google_ads":     os.path.join(BASE, "Paid Signals", "google_ads_scrape.py"),
-    "meta_ads":       os.path.join(BASE, "Paid Signals", "meta_ads.py"),
+    "google_ads":     os.path.join(BASE, "services", "paid",         "google_ads_scrape.py"),
+    "meta_ads":       os.path.join(BASE, "services", "paid",         "meta_ads.py"),
     # Sync
     "master_sync":    os.path.join(BASE, "master_sync.py"),
 }
 
 # CSV output path for each script key (resolved after run, relative to script cwd)
 CSV_OUTPUT_MAP = {
-    "social_news":    os.path.join(BASE, "Social_listening", "news_us_insights.csv"),
-    "social_reddit":  os.path.join(BASE, "Social_listening", "reddit_us_insights.csv"),
-    "social_youtube": os.path.join(BASE, "Social_listening", "youtube_us_insights.csv"),
-    "trends":         os.path.join(BASE, "Trends Engine",    "google_trends_raw.csv"),
-    "hacker_news":    os.path.join(BASE, "Trends Engine",    "hacker_news_raw.csv"),
+    "social_news":    os.path.join(BASE, "services", "social",      "news_us_insights.csv"),
+    "social_reddit":  os.path.join(BASE, "services", "social",      "reddit_us_insights.csv"),
+    "social_youtube": os.path.join(BASE, "services", "social",      "youtube_us_insights.csv"),
+    "trends":         os.path.join(BASE, "services", "trends",      "google_trends_raw.csv"),
+    "hacker_news":    os.path.join(BASE, "services", "trends",      "hacker_news_raw.csv"),
     "competitive":    [
-        os.path.join(BASE, "Competitive Intelligence", "competitor_authority.csv"),
-        os.path.join(BASE, "Competitive Intelligence", "competitor_tech_stacks.csv"),
+        os.path.join(BASE, "services", "competitive", "competitor_authority.csv"),
+        os.path.join(BASE, "services", "competitive", "competitor_tech_stacks.csv"),
     ],
-    "seo":            os.path.join(BASE, "SEO / AEO", "serp_rankings_audit.csv"),
-    "google_ads":     os.path.join(BASE, "Paid Signals", "google_ads_raw.csv"),
-    "meta_ads":       os.path.join(BASE, "Paid Signals", "meta_ads_raw.csv"),
+    "seo":            os.path.join(BASE, "services", "seo",         "serp_rankings_audit.csv"),
+    "google_ads":     os.path.join(BASE, "services", "paid",        "google_ads_raw.csv"),
+    "meta_ads":       os.path.join(BASE, "services", "paid",        "meta_ads_raw.csv"),
 }
 
 

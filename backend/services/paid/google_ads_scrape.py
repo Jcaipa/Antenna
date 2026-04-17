@@ -7,7 +7,7 @@ import pandas as pd
 import requests
 from dotenv import load_dotenv
 
-load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+load_dotenv()  # searches upward from script dir → finds /Antenna/.env
 
 SERPAPI_KEY = os.getenv("SERPAPI_KEY", "")
 SAVE_PATH   = "google_ads_raw.csv"

@@ -2241,6 +2241,11 @@
             <span class="sb-tooltip">Signals</span>
           </button>
 
+          <button class="sb-btn" id="sb-pipelines" onclick="switchPanel('pipelines')">
+            <span class="ms">sync</span>
+            <span class="sb-tooltip">Pipelines</span>
+          </button>
+
           <div class="sb-divider"></div>
 
           <button class="sb-btn" onclick="openModal()">
@@ -2503,6 +2508,103 @@
 
           <!-- CONTENT -->
           <section id="panel-content" class="panel">
+            <!-- ... existing content ... -->
+          </section>
+
+          <section id="panel-pipelines" class="panel">
+            <div class="section-head">
+              <div>
+                <h2>Data Pipelines</h2>
+                <p>Gestiona la sincronización de datos directamente desde APIs externas.</p>
+              </div>
+            </div>
+
+            <div class="grid-3">
+              <div class="card surface">
+                <div class="card-head">
+                  <div>
+                    <h3 class="card-title">YouTube Sync</h3>
+                    <p class="card-note">Busca videos y analiza sentimiento.</p>
+                  </div>
+                  <span class="ms b-amber" style="padding:8px;border-radius:12px;">video_library</span>
+                </div>
+                <button class="btn b-amber" onclick="triggerSync('YouTube')" id="btn-sync-YouTube" style="width:100%">
+                  <span class="ms">sync</span>
+                  <span>Sincronizar ahora</span>
+                </button>
+              </div>
+
+              <div class="card surface">
+                <div class="card-head">
+                  <div>
+                    <h3 class="card-title">Reddit Sync</h3>
+                    <p class="card-note">Monitorea posts y hilos relevantes.</p>
+                  </div>
+                  <span class="ms b-red" style="padding:8px;border-radius:12px;">forum</span>
+                </div>
+                <button class="btn b-red" onclick="triggerSync('Reddit')" id="btn-sync-Reddit" style="width:100%">
+                  <span class="ms">sync</span>
+                  <span>Sincronizar ahora</span>
+                </button>
+              </div>
+
+              <div class="card surface">
+                <div class="card-head">
+                  <div>
+                    <h3 class="card-title">Google News Sync</h3>
+                    <p class="card-note">Noticias y tendencias mundiales.</p>
+                  </div>
+                  <span class="ms b-blue" style="padding:8px;border-radius:12px;">newspaper</span>
+                </div>
+                <button class="btn b-blue" onclick="triggerSync('News')" id="btn-sync-News" style="width:100%">
+                  <span class="ms">sync</span>
+                  <span>Sincronizar ahora</span>
+                </button>
+              </div>
+
+              <div class="card surface">
+                <div class="card-head">
+                  <div>
+                    <h3 class="card-title">Google Ads Sync</h3>
+                    <p class="card-note">Monitorea anuncios pagados en Search.</p>
+                  </div>
+                  <span class="ms b-green" style="padding:8px;border-radius:12px;">ad_units</span>
+                </div>
+                <button class="btn b-green" onclick="triggerSync('GoogleAds')" id="btn-sync-GoogleAds" style="width:100%">
+                  <span class="ms">sync</span>
+                  <span>Sincronizar ahora</span>
+                </button>
+              </div>
+
+              <div class="card surface">
+                <div class="card-head">
+                  <div>
+                    <h3 class="card-title">Hacker News Sync</h3>
+                    <p class="card-note">Señales tecnológicas y de innovación.</p>
+                  </div>
+                  <span class="ms b-plum" style="padding:8px;border-radius:12px;">terminal</span>
+                </div>
+                <button class="btn b-plum" onclick="triggerSync('HN')" id="btn-sync-HN" style="width:100%">
+                  <span class="ms">sync</span>
+                  <span>Sincronizar ahora</span>
+                </button>
+              </div>
+
+              <div class="card surface">
+                <div class="card-head">
+                  <div>
+                    <h3 class="card-title">Trends Sync</h3>
+                    <p class="card-note">Volumen de interés en Google Trends.</p>
+                  </div>
+                  <span class="ms b-red" style="padding:8px;border-radius:12px;">trending_up</span>
+                </div>
+                <button class="btn b-red" onclick="triggerSync('Trends')" id="btn-sync-Trends" style="width:100%">
+                  <span class="ms">sync</span>
+                  <span>Sincronizar ahora</span>
+                </button>
+              </div>
+            </div>
+          </section>
             <div class="section-head">
               <div>
                 <h2>Content & key signals</h2>
@@ -2684,6 +2786,29 @@
   </div>
 
   <script>
+    function triggerSync(type) {
+      const btn = document.getElementById('btn-sync-' + type);
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="ms">hourglass_empty</span><span>Sincronizando...</span>';
+      
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          if (res.success) {
+            alert('✅ Sincronización de ' + type + ' completada: ' + res.count + ' nuevos registros.');
+            location.reload(); // Refresh to see data
+          } else {
+            alert('❌ Error: ' + res.error);
+          }
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          alert('❌ Error crítico: ' + err.message);
+        })['run' + type + 'Sync']();
+    }
     var D = null;
     var CHARTS = {};
     var SOURCE_LABELS = {
