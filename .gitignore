@@ -1,5 +1,7 @@
 # Credenciales y archivos temporales
-*.json
+clave_*.json
+credentials.json
+secrets.json
 *.csv
 .env*
 snapshots/
