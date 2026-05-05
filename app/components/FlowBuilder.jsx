@@ -191,18 +191,22 @@ export default function FlowBuilder({ job, onRun, onSave, onBack }) {
   /* ── HORIZONTAL LAYOUT (left → right) ── */
   const hLayout = useMemo(() => {
     const n = [];
-    n.push({ id:'trigger', type:'n8nNode', position:{ x:30, y:150 }, data:{ type:'schedule', label:'Schedule', icon:'⏰', color:'#6364FF', state:'idle', sched, tz } });
-    n.push({ id:'kw', type:'n8nNode', position:{ x:230, y:150 }, data:{ type:'keywords', label:'Keywords', icon:'🔑', color:'#ff5a1f', state:'idle', kw:keywordsArr.join(', ') } });
-    const maxPerCol = 4;
-    const chW = 200; const chH = 85;
+    n.push({ id:'trigger', type:'n8nNode', position:{ x:30, y:280 }, data:{ type:'schedule', label:'Schedule', icon:'⏰', color:'#6364FF', state:'idle', sched, tz } });
+    n.push({ id:'kw', type:'n8nNode', position:{ x:230, y:280 }, data:{ type:'keywords', label:'Keywords', icon:'🔑', color:'#ff5a1f', state:'idle', kw:keywordsArr.join(', ') } });
+    const maxPerCol = Math.min(activeCh.length, 6);
+    const chH = 90;
+    const chW = 200;
     activeCh.forEach((t,i) => {
       const ch = CHANNEL_TYPES.find(c=>c.type===t); if(!ch) return;
-      n.push({ id:`ch-${t}`, type:'n8nNode', position:{ x:450, y:30 + (i%maxPerCol)*chH }, data:{...ch, state:'idle', config:nodeData[t]||defC[t]||{limit:50}} });
+      n.push({ id:`ch-${t}`, type:'n8nNode', position:{ x:450 + Math.floor(i/maxPerCol)*chW, y:30 + (i%maxPerCol)*chH }, data:{...ch, state:'idle', config:nodeData[t]||defC[t]||{limit:50}} });
     });
-    const engY = Math.min(activeCh.length, maxPerCol) > 0 ? 30 + Math.min(activeCh.length, maxPerCol) * chH / 2 : 150;
-    n.push({ id:'engine', type:'n8nNode', position:{ x:680, y:engY }, data:{ type:'alert-engine', label:'Alert Engine', icon:'🔔', color:'#2b8e5c', state:'idle' } });
-    if(notifyChat) n.push({ id:'chat', type:'n8nNode', position:{ x:880, y:engY-30 }, data:{ type:'google-chat', label:'Google Chat', icon:'📢', color:'#34A853', state:'idle' } });
-    if(notifyEmail) n.push({ id:'email', type:'n8nNode', position:{ x:880, y:engY+30 }, data:{ type:'email-alert', label:'Email Alert', icon:'📧', color:'#F59E0B', state:'idle' } });
+    const totalCols = Math.max(1, Math.ceil(activeCh.length / maxPerCol));
+    const totalRows = Math.min(activeCh.length, maxPerCol);
+    const engY = totalRows > 0 ? 30 + (totalRows * chH) / 2 : 280;
+    const engX = 450 + totalCols * chW + 30;
+    n.push({ id:'engine', type:'n8nNode', position:{ x:engX, y:engY }, data:{ type:'alert-engine', label:'Alert Engine', icon:'🔔', color:'#2b8e5c', state:'idle' } });
+    if(notifyChat) n.push({ id:'chat', type:'n8nNode', position:{ x:engX+200, y:engY-30 }, data:{ type:'google-chat', label:'Google Chat', icon:'📢', color:'#34A853', state:'idle' } });
+    if(notifyEmail) n.push({ id:'email', type:'n8nNode', position:{ x:engX+200, y:engY+30 }, data:{ type:'email-alert', label:'Email Alert', icon:'📧', color:'#F59E0B', state:'idle' } });
     return n;
   }, [keywordsArr, activeCh, sched, tz, notifyChat, notifyEmail, nodeData, defC]);
 
@@ -245,6 +249,8 @@ export default function FlowBuilder({ job, onRun, onSave, onBack }) {
 
   useEffect(()=>{setEdges(buildEdges(nodes));},[nodes,buildEdges,setEdges]);
   useEffect(()=>{setNodes(initialNodes);},[initialNodes,setNodes]);
+  // Fit view after nodes change
+  useEffect(() => { if (rfi) { setTimeout(() => rfi.fitView({ padding: 0.2, duration: 300 }), 100); } }, [initialNodes, rfi, layoutHoriz]);
 
   const onConnect = useCallback((p)=>setEdges(eds=>addEdge(p,eds)),[]);
   const onDragOver = useCallback(e=>{e.preventDefault();e.dataTransfer.dropEffect='move';},[]);
@@ -364,12 +370,15 @@ export default function FlowBuilder({ job, onRun, onSave, onBack }) {
         <div className="flex-1 relative" ref={wrapper} tabIndex={0} onKeyDown={onKeyDown}>
           <ReactFlowProvider>
             <ReactFlow
+              key={layoutHoriz ? 'horizontal' : 'vertical'}
               nodes={nodes} edges={edges}
               onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
               onConnect={onConnect} onDrop={onDrop} onDragOver={onDragOver}
               onNodeClick={onNodeClick} onInit={setRfi}
               nodeTypes={nodeTypes}
-              fitView minZoom={0.1} maxZoom={3}
+              fitView
+              fitViewOptions={{ padding: 0.25 }}
+              minZoom={0.15} maxZoom={3}
               snapToGrid snapGrid={[20,20]}
               attributionPosition="bottom-left"
               deleteKeyCode={['Delete','Backspace']}
@@ -377,7 +386,7 @@ export default function FlowBuilder({ job, onRun, onSave, onBack }) {
             >
               <Controls showInteractive={false} className="!rounded-[8px]" />
               <MiniMap style={{ borderRadius:'8px', border:'1px solid rgba(0,0,0,0.08)' }} nodeColor={n=>n.data?.color||'#666'} maskColor="rgba(0,0,0,0.04)" />
-              <Background variant="dots" gap={20} size={1.5} color="rgba(0,0,0,0.06)" />
+              <Background variant="lines" gap={24} size={1.5} color="rgba(0,0,0,0.08)" />
 
               {showCfg==='kw' && (
                 <div className="absolute top-3 left-3 z-20">
