@@ -14,6 +14,38 @@ import {
   ReactFlowProvider,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import {
+  FaXTwitter, FaRedditAlien, FaYoutube, FaBluesky,
+} from 'react-icons/fa6';
+import { FaMastodon, FaTiktok, FaGoogle, FaFacebook } from 'react-icons/fa';
+import { SiYcombinator, SiGoogleads, SiGoogletagmanager } from 'react-icons/si';
+import { HiOutlineGlobe, HiOutlineNewspaper } from 'react-icons/hi2';
+import { MdOutlineTrendingUp, MdAdsClick } from 'react-icons/md';
+
+const ChannelIcon = ({ type, size = 16 }) => {
+  const s = { fontSize: size, lineHeight: 1 };
+  switch(type) {
+    case 'x': return <FaXTwitter style={s} />;
+    case 'reddit': return <FaRedditAlien style={s} />;
+    case 'youtube': return <FaYoutube style={s} />;
+    case 'bluesky': return <FaBluesky style={s} />;
+    case 'mastodon': return <FaMastodon style={s} />;
+    case 'tiktok': return <FaTiktok style={s} />;
+    case 'hacker_news': return <SiYcombinator style={{...s, color: '#FF6600'}} />;
+    case 'google_alert': return <FaGoogle style={s} />;
+    case 'google_trends': return <MdOutlineTrendingUp style={s} />;
+    case 'google_serp': return <SiGoogletagmanager style={s} />;
+    case 'google_ads': return <SiGoogleads style={s} />;
+    case 'meta_ads': return <FaFacebook style={s} />;
+    case 'site_monitor': return <HiOutlineGlobe style={s} />;
+    case 'news': return <HiOutlineNewspaper style={s} />;
+    case 'schedule': return <span>⏰</span>;
+    case 'keywords': return <span>🔑</span>;
+    case 'google-chat': return <span>📢</span>;
+    case 'email-alert': return <span>📧</span>;
+    default: return <MdAdsClick style={s} />;
+  }
+};
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -87,7 +119,7 @@ function N8nNode({ data }) {
       {!isOut && <Handle type="source" position={Position.Right} className="!w-3 !h-3 !border-2 !border-white !shadow-sm" style={{ background: isDone?'#10b981':isRun?'#ff5a1f':color, right: -6 }} />}
 
       <div className="flex items-center gap-2 px-3 py-2.5 rounded-t-[8px]" style={{ background:`${color}10` }}>
-        <span className="text-base">{isRun ? '⏳' : isDone ? '✅' : icon}</span>
+        <span className="text-base">{isRun ? '⏳' : isDone ? '✅' : <ChannelIcon type={type} size={16} />}</span>
         <div className="flex-1 min-w-0">
           <div className="text-[12px] font-bold" style={{ color:isDone?'#10b981':color }}>{label}</div>
           {isKW && <div className="flex flex-wrap gap-1 mt-1 max-w-[200px]">{kw?.split(',').filter(Boolean).slice(0, 4).map((k,i)=><span key={i} className="text-[8px] bg-[rgba(255,90,31,0.15)] text-[#ff5a1f] px-1.5 py-0.5 rounded-[4px] font-bold truncate max-w-[80px]">{k.trim()}</span>)}</div>}
@@ -178,7 +210,7 @@ function CHP({ type, config, onChange, onClose }) {
   const c = config||{};
   return (
     <div className="bg-white rounded-[12px] shadow-xl border p-4 w-[250px]">
-      <div className="flex justify-between mb-3"><span className="font-bold text-[13px] flex items-center gap-2"><span>{item.icon}</span><span style={{color:item.color}}>{item.label}</span></span><button onClick={onClose} className="text-[#888]">✕</button></div>
+      <div className="flex justify-between mb-3"><span className="font-bold text-[13px] flex items-center gap-2"><span><ChannelIcon type={type} size={20} /></span><span style={{color:item.color}}>{item.label}</span></span><button onClick={onClose} className="text-[#888]">✕</button></div>
       <label className="block mb-2"><span className="text-[9px] font-bold uppercase text-[#888] block mb-1">Resultados</span>
         <div className="flex items-center gap-2"><input type="range" min={5} max={200} step={5} value={c.limit||50} onChange={e=>onChange({...c,limit:parseInt(e.target.value)})} className="flex-1 accent-[#ff5a1f]" /><span className="text-[13px] font-bold w-8 text-right">{c.limit||50}</span></div></label>
       <label className="block"><span className="text-[9px] font-bold uppercase text-[#888] block mb-1">Orden</span>
@@ -371,7 +403,7 @@ export default function FlowBuilder({ job, onRun, onSave, onBack }) {
                     <div key={item.type} draggable
                       onDragStart={e=>{e.dataTransfer.setData('app/node',item.type);e.dataTransfer.effectAllowed='move';}}
                       className="flex items-center gap-2 px-2.5 py-1.5 rounded-[6px] cursor-grab hover:bg-[#f5f5f5] active:cursor-grabbing text-[11px] font-bold transition-all border border-transparent hover:border-[rgba(0,0,0,0.06)]" style={{color:item.color}}>
-                      <span className="text-sm">{item.icon}</span>
+                      <span className="text-sm"><ChannelIcon type={item.type} size={16} /></span>
                       <span className="truncate">{item.label}</span>
                     </div>
                   ))}
