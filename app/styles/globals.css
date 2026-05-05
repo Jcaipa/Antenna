@@ -10,6 +10,11 @@
   --brand-soft: rgba(255,90,31,0.12);
   --ink: #201813;
   --ink-2: #5f564f;
+  --brand: #ff5a1f;
+  --brand-2: #f1c64f;
+  --brand-soft: rgba(255,90,31,0.12);
+  --ink: #201813;
+  --ink-2: #5f564f;
   --ink-3: #988d84;
   --bg-0: #1d130f;
   --bg-1: #2b1b14;
@@ -38,6 +43,34 @@
   --blue-soft: rgba(75,123,242,0.12);
   --plum: #8b63e7;
   --plum-soft: rgba(139,99,231,0.12);
+}
+
+.dark {
+  --ink: #e8e0d8;
+  --ink-2: #a8988e;
+  --ink-3: #7a6e66;
+  --paper: #1a1512;
+  --paper-2: #221c18;
+  --card: rgba(26,21,18,0.92);
+  --card-strong: rgba(26,21,18,0.96);
+  --line: rgba(232,224,216,0.10);
+  --line-2: rgba(232,224,216,0.06);
+  --shadow-xs: 0 4px 18px rgba(0,0,0,0.3);
+  --shadow-sm: 0 10px 30px rgba(0,0,0,0.4);
+  --shadow-md: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.dark body {
+  background:
+    radial-gradient(circle at top left, rgba(255,90,31,0.08), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(241,198,79,0.06), transparent 24%),
+    linear-gradient(180deg, #0f0b09 0%, #1a1512 100%);
+  color: var(--ink);
+}
+
+.dark .surface {
+  background: var(--card);
+  border-color: var(--line);
 }
 
 *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }

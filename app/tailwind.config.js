@@ -4,6 +4,7 @@ module.exports = {
     "./app/**/*.{js,jsx}",
     "./components/**/*.{js,jsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -26,6 +27,11 @@ module.exports = {
         success: { DEFAULT: '#2b8e5c', soft: 'rgba(43,142,92,0.12)' },
         blue: { DEFAULT: '#4b7bf2', soft: 'rgba(75,123,242,0.12)' },
         plum: { DEFAULT: '#8b63e7', soft: 'rgba(139,99,231,0.12)' },
+        dark: {
+          bg: '#0f0b09', paper: '#1a1512', card: 'rgba(26,21,18,0.92)',
+          ink: { DEFAULT: '#e8e0d8', 2: '#a8988e', 3: '#7a6e66' },
+          line: 'rgba(232,224,216,0.10)',
+        },
       },
       fontFamily: {
         syne: ['Syne', 'sans-serif'],

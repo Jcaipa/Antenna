@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Tabs from './ui/Tabs';
 import Button from './ui/Button';
+import ThemeToggle from './ThemeToggle';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -28,9 +29,10 @@ export default function UnifiedShell({ children, activeTab: forcedTab }) {
   const [loading, setLoading] = useState(true);
   const [activeJob, setActiveJob] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerContent, setDrawerContent] = useState('results'); // results | alerts
+  const [drawerContent, setDrawerContent] = useState('results');
   const [results, setResults] = useState([]);
   const [user, setUser] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const activeTab = forcedTab || (pathname === '/dashboard' ? 'dashboard' : 'monitors');
 
@@ -79,9 +81,24 @@ export default function UnifiedShell({ children, activeTab: forcedTab }) {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#fcf7f2]">
+    <div className="flex h-screen overflow-hidden bg-[#fcf7f2] dark:bg-[#0f0b09] transition-colors duration-200">
+      {/* Mobile sidebar toggle */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="fixed top-3 left-3 z-50 w-9 h-9 rounded-[10px] bg-[rgba(29,19,15,0.9)] text-white flex items-center justify-center text-lg md:hidden"
+      >
+        {sidebarOpen ? '✕' : '☰'}
+      </button>
+
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 z-10 md:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* ── LEFT SIDEBAR ── */}
-      <aside className="w-[240px] flex-shrink-0 bg-[rgba(29,19,15,0.97)] text-[rgba(255,255,255,0.75)] flex flex-col h-full overflow-hidden border-r border-[rgba(255,255,255,0.05)] relative">
+      <aside className={`${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      } md:translate-x-0 transition-transform duration-200 w-[240px] flex-shrink-0 bg-[rgba(29,19,15,0.97)] text-[rgba(255,255,255,0.75)] flex flex-col h-full overflow-hidden border-r border-[rgba(255,255,255,0.05)] relative z-20`}>
         {/* Gradient overlay */}
         <div className="absolute inset-0 pointer-events-none z-0 bg-gradient-to-b from-[rgba(255,90,31,0.07)] via-transparent via-30% to-[rgba(241,198,79,0.05)]" />
 
@@ -174,6 +191,7 @@ export default function UnifiedShell({ children, activeTab: forcedTab }) {
         <header className="flex items-center justify-between px-8 pt-5 pb-0 gap-4 flex-wrap">
           <Tabs tabs={TOP_TABS} activeTab={activeTab} onChange={switchTab} />
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <span className="flex items-center gap-1.5 text-xs text-[#5f564f]">
               <span className="w-2 h-2 rounded-full bg-[#67d391] animate-pulse-slow" />
               Sistema Ready
