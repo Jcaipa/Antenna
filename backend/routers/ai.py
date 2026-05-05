@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from pydantic import BaseModel
 from typing import Optional, List
-import os, json
+import os, json, sys
+from datetime import datetime
 
 from database import (
     get_db,
@@ -175,6 +176,41 @@ def ai_status():
         "gemini_available": bool(GROQ_KEY),
         "missing": [] if GROQ_KEY else ["GROQ_API_KEY"],
     }
+
+
+# ── INSIGHTS ENDPOINT ──────────────────────────────────────────────────────────
+
+class InsightsRequest(BaseModel):
+    keyword: Optional[str] = None
+
+
+@router.post("/insights")
+def generate_insights(body: InsightsRequest, db: Session = Depends(get_db)):
+    from routers.data import summary as get_summary
+    import json
+    summary = get_summary(db)
+    kpis = summary.get("kpis", {})
+    total = sum(v for v in kpis.values() if isinstance(v, (int, float)))
+    sent = summary.get("sentiment_distribution", {})
+    top_kw = summary.get("top_keywords", [])[:5]
+
+    client = get_client()
+    prompt = f"""Eres un analista de social listening. Resumen ejecutivo en 3-4 líneas (máx 150 tokens) en español, informal, directo. Sin saludos ni markdown.
+
+Datos: total_menciones={total}, por_fuente={json.dumps(kpis)}, sentimiento={json.dumps(sent)}, top_keywords={json.dumps(top_kw)}, filtro={body.keyword or 'ninguno'}.
+
+Estructura: "Hoy {total} menciones. Fuente líder con mas posts. Sentimiento: X% neutral / Y% positivo / Z% negativo. Una recomendacion."
+"""
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=150, temperature=0.3,
+        )
+        text = response.choices[0].message.content.strip()
+    except Exception as e:
+        text = f"No se pudo generar análisis: {e}"
+    return {"text": text, "generated_at": str(datetime.utcnow())}
 
 
 # ── CATEGORIZE PROFILES ──────────────────────────────────────────────────────
