@@ -179,6 +179,7 @@ export default function FlowBuilder({ job, onRun, onSave, onBack }) {
   const [nodeData, setNodeData] = useState({});
   const [saving, setSaving] = useState(false);
   const [showAI, setShowAI] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState({ 'Triggers': true, 'Input': true, 'Canales': false, 'Alertas': false });
   const [aiM, setAiM] = useState([]);
   const [aiI, setAiI] = useState('');
   const [aiS, setAiS] = useState(false);
@@ -328,17 +329,29 @@ export default function FlowBuilder({ job, onRun, onSave, onBack }) {
           <button onClick={onBack} className="text-[#888] hover:text-[#000] text-xs mb-2 flex items-center gap-1">← Volver</button>
           <input value={jobName} onChange={e=>setJobName(e.target.value)} className="w-full px-2.5 py-1.5 rounded-[6px] border text-[11px] font-bold outline-none focus:border-[#ff5a1f]" placeholder="Nombre" />
         </div>
-        <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        <div className="flex-1 overflow-y-auto p-3 space-y-1">
           {PALETTE.map(g=>(
             <div key={g.group}>
-              <div className="text-[8px] font-bold uppercase text-[#888] mb-1">{g.group}</div>
-              {g.items.map(item=>(
-                <div key={item.type} draggable
-                  onDragStart={e=>{e.dataTransfer.setData('app/node',item.type);e.dataTransfer.effectAllowed='move';}}
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-[6px] cursor-grab hover:bg-[#f5f5f5] active:cursor-grabbing text-[11px] font-bold transition-all" style={{color:item.color}}>
-                  <span>{item.icon}</span><span className="truncate">{item.label}</span>
+              <button
+                onClick={() => setExpandedGroups(p => ({...p, [g.group]: !p[g.group]}))}
+                className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-[6px] text-[9px] font-bold uppercase text-[#888] hover:bg-[#f5f5f5] transition-all mb-0.5"
+              >
+                <span className="text-[7px] transition-transform duration-150" style={{ transform: expandedGroups[g.group] ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
+                {g.group}
+                <span className="ml-auto text-[8px] text-[#bbb]">{g.items.length}</span>
+              </button>
+              {expandedGroups[g.group] && (
+                <div className="space-y-0.5 ml-1">
+                  {g.items.map(item=>(
+                    <div key={item.type} draggable
+                      onDragStart={e=>{e.dataTransfer.setData('app/node',item.type);e.dataTransfer.effectAllowed='move';}}
+                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-[6px] cursor-grab hover:bg-[#f5f5f5] active:cursor-grabbing text-[11px] font-bold transition-all border border-transparent hover:border-[rgba(0,0,0,0.06)]" style={{color:item.color}}>
+                      <span className="text-sm">{item.icon}</span>
+                      <span className="truncate">{item.label}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           ))}
         </div>
