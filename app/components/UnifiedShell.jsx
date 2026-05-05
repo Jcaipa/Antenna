@@ -91,38 +91,19 @@ export default function UnifiedShell({ children, activeTab: forcedTab }) {
 
       {/* MAIN */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Topbar */}
-        <header className="flex items-center justify-between px-6 pt-4 pb-0 gap-4">
-          <div className="flex items-center gap-4">
+        {/* Simple topbar — solo status + theme */}
+        <header className="flex items-center justify-between px-6 pt-3 pb-0">
+          <div className="flex items-center gap-3">
             <span className="flex items-center gap-1.5 text-[11px] text-[#5f564f]">
               <span className="w-2 h-2 rounded-full bg-[#67d391] animate-pulse-slow" />
-              Live
+              Antenna Live
             </span>
-            <div className="hidden sm:flex bg-[rgba(32,24,19,0.06)] rounded-[8px] p-0.5">
-              {[
-                { key: 'dashboard', href: '/', icon: '🏠', label: 'General' },
-                { key: 'social', href: '/social', icon: '📱', label: 'Social' },
-                { key: 'search', href: '/search', icon: '🔍', label: 'Search' },
-                { key: 'ads', href: '/ads', icon: '💰', label: 'Ads' },
-                { key: 'web', href: '/web', icon: '🌐', label: 'Web' },
-              ].map(tab => {
-                const tabActive = forcedTab === tab.key || pathname === tab.href || (tab.href !== '/' && pathname.startsWith(tab.href));
-                return (
-                  <button key={tab.key} onClick={() => router.push(tab.href)}
-                    className={`px-3 py-1.5 rounded-[6px] text-[11px] font-bold transition-all ${
-                      tabActive ? 'bg-white text-[#201813] shadow-sm' : 'text-[#5f564f] hover:text-[#201813]'
-                    }`}>
-                    {tab.icon} {tab.label}
-                  </button>
-                );
-              })}
-            </div>
+            <a href="/monitors" className="text-[11px] text-[#5f564f] hover:text-[#ff5a1f] transition-colors" title="Monitores">📋</a>
+            <a href="/pipeline/mon_visa" className="text-[11px] text-[#5f564f] hover:text-[#ff5a1f] transition-colors" title="Pipeline">🔀</a>
+            <a href="/ai" className="text-[11px] text-[#5f564f] hover:text-[#ff5a1f] transition-colors" title="AI">🤖</a>
           </div>
-
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <a href="/monitors" className="text-[11px] text-[#5f564f] hover:text-[#ff5a1f] transition-colors">📋</a>
-            <a href="/ai" className="text-[11px] text-[#5f564f] hover:text-[#ff5a1f] transition-colors">🤖</a>
           </div>
         </header>
 
