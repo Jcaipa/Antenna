@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import UnifiedShell from '../../components/UnifiedShell';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Skeleton from '../../components/ui/Skeleton';
-import FlowBuilder from '../../components/FlowBuilder';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -34,8 +34,6 @@ export default function MonitorsPage() {
   const [editingJob, setEditingJob] = useState(null);
   const [runOutput, setRunOutput] = useState('');
   const [runningJobId, setRunningJobId] = useState(null);
-  const [viewMode, setViewMode] = useState('cards');
-  const [flowJob, setFlowJob] = useState(null);
   const outputRef = useRef(null);
 
   const fetchJobs = async () => {
@@ -93,26 +91,6 @@ export default function MonitorsPage() {
           <p className="text-[13px] text-[#988d84] mt-1">Configura y ejecuta monitoreo multicanal</p>
         </div>
         <div className="flex items-center gap-3">
-          {jobs.length > 0 && (
-            <div className="flex bg-[rgba(32,24,19,0.06)] rounded-[10px] p-0.5">
-              <button
-                onClick={() => setViewMode('cards')}
-                className={`px-3 py-1.5 rounded-[8px] text-xs font-bold transition-all ${
-                  viewMode === 'cards' ? 'bg-white text-[#201813] shadow-sm' : 'text-[#5f564f] hover:text-[#201813]'
-                }`}
-              >
-                📋 Cards
-              </button>
-              <button
-                onClick={() => { setViewMode('flow'); if (!flowJob && jobs.length > 0) setFlowJob(jobs[0]); }}
-                className={`px-3 py-1.5 rounded-[8px] text-xs font-bold transition-all ${
-                  viewMode === 'flow' ? 'bg-white text-[#201813] shadow-sm' : 'text-[#5f564f] hover:text-[#201813]'
-                }`}
-              >
-                🔀 Flow
-              </button>
-            </div>
-          )}
           <Button onClick={() => setShowCreate(true)}>+ Nuevo Monitor</Button>
         </div>
       </div>
@@ -211,9 +189,11 @@ export default function MonitorsPage() {
                       </span>
                     ) : '▶ Ejecutar'}
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => { setFlowJob(job); setViewMode('flow'); }}>
-                    🔀 Flow
-                  </Button>
+                  <Link href={`/pipeline/${job.id}`} passHref legacyBehavior>
+                    <Button size="sm" variant="outline" as="a">
+                      🔀 Flow
+                    </Button>
+                  </Link>
                   <Button size="sm" variant="outline" onClick={() => { setEditingJob(job); setShowEdit(true); }}>
                     ✏️ Editar
                   </Button>
@@ -225,26 +205,6 @@ export default function MonitorsPage() {
             </Card>
           ))}
         </div>
-      )}
-
-      {/* Flow view - full screen */}
-      {!loading && jobs.length > 0 && viewMode === 'flow' && flowJob && (
-        <FlowBuilder
-          job={flowJob}
-          onBack={() => setViewMode('cards')}
-          onRun={async () => {
-            await runJob(flowJob);
-            fetchJobs();
-          }}
-          onSave={async (body) => {
-            await fetch(`${API}/api/jobs/${flowJob.id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(body),
-            });
-            fetchJobs();
-          }}
-        />
       )}
 
       {/* Run output */}
