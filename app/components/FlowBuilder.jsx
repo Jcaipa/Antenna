@@ -188,25 +188,29 @@ export default function FlowBuilder({ job, onRun, onSave, onBack }) {
 
   const defC = useMemo(()=>Object.fromEntries(CHANNEL_TYPES.map(c=>[c.type,{limit:50,sort:'relevance'}])),[]);
 
-  /* ── HORIZONTAL LAYOUT (left → right) ── */
+  /* ── HORIZONTAL LAYOUT (left → right) — lineas NUNCA se cruzan ── */
   const hLayout = useMemo(() => {
     const n = [];
-    n.push({ id:'trigger', type:'n8nNode', position:{ x:30, y:280 }, data:{ type:'schedule', label:'Schedule', icon:'⏰', color:'#6364FF', state:'idle', sched, tz } });
-    n.push({ id:'kw', type:'n8nNode', position:{ x:230, y:280 }, data:{ type:'keywords', label:'Keywords', icon:'🔑', color:'#ff5a1f', state:'idle', kw:keywordsArr.join(', ') } });
-    const maxPerCol = Math.min(activeCh.length, 6);
     const chH = 90;
-    const chW = 200;
+    const chCount = activeCh.length;
+    const totalH = Math.max(1, chCount) * chH;
+    const centerY = 80 + totalH / 2 - chH / 2;
+
+    // Trigger y Keywords al CENTRO vertical de todos los canales
+    n.push({ id:'trigger', type:'n8nNode', position:{ x:30, y:centerY }, data:{ type:'schedule', label:'Schedule', icon:'⏰', color:'#6364FF', state:'idle', sched, tz } });
+    n.push({ id:'kw', type:'n8nNode', position:{ x:200, y:centerY }, data:{ type:'keywords', label:'Keywords', icon:'🔑', color:'#ff5a1f', state:'idle', kw:keywordsArr.join(', ') } });
+
+    // Canales en UNA sola columna (vertical)
     activeCh.forEach((t,i) => {
       const ch = CHANNEL_TYPES.find(c=>c.type===t); if(!ch) return;
-      n.push({ id:`ch-${t}`, type:'n8nNode', position:{ x:450 + Math.floor(i/maxPerCol)*chW, y:30 + (i%maxPerCol)*chH }, data:{...ch, state:'idle', config:nodeData[t]||defC[t]||{limit:50}} });
+      n.push({ id:`ch-${t}`, type:'n8nNode', position:{ x:400, y:80 + i*chH }, data:{...ch, state:'idle', config:nodeData[t]||defC[t]||{limit:50}} });
     });
-    const totalCols = Math.max(1, Math.ceil(activeCh.length / maxPerCol));
-    const totalRows = Math.min(activeCh.length, maxPerCol);
-    const engY = totalRows > 0 ? 30 + (totalRows * chH) / 2 : 280;
-    const engX = 450 + totalCols * chW + 30;
-    n.push({ id:'engine', type:'n8nNode', position:{ x:engX, y:engY }, data:{ type:'alert-engine', label:'Alert Engine', icon:'🔔', color:'#2b8e5c', state:'idle' } });
-    if(notifyChat) n.push({ id:'chat', type:'n8nNode', position:{ x:engX+200, y:engY-30 }, data:{ type:'google-chat', label:'Google Chat', icon:'📢', color:'#34A853', state:'idle' } });
-    if(notifyEmail) n.push({ id:'email', type:'n8nNode', position:{ x:engX+200, y:engY+30 }, data:{ type:'email-alert', label:'Email Alert', icon:'📧', color:'#F59E0B', state:'idle' } });
+
+    // Engine al centro de todos los canales
+    const engX = 580;
+    n.push({ id:'engine', type:'n8nNode', position:{ x:engX, y:centerY }, data:{ type:'alert-engine', label:'Alert Engine', icon:'🔔', color:'#2b8e5c', state:'idle' } });
+    if(notifyChat) n.push({ id:'chat', type:'n8nNode', position:{ x:engX+170, y:centerY-40 }, data:{ type:'google-chat', label:'Google Chat', icon:'📢', color:'#34A853', state:'idle' } });
+    if(notifyEmail) n.push({ id:'email', type:'n8nNode', position:{ x:engX+170, y:centerY+40 }, data:{ type:'email-alert', label:'Email Alert', icon:'📧', color:'#F59E0B', state:'idle' } });
     return n;
   }, [keywordsArr, activeCh, sched, tz, notifyChat, notifyEmail, nodeData, defC]);
 
