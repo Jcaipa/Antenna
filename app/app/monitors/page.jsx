@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import UnifiedShell from '../../components/UnifiedShell';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -225,6 +226,7 @@ export default function MonitorsPage() {
 
 function JobModal({ job, onClose }) {
   const isEdit = !!job;
+  const router = useRouter();
   const [name, setName] = useState(job?.name || '');
   const [keywords, setKeywords] = useState(
     ((typeof job?.keywords === 'string' ? JSON.parse(job.keywords) : job?.keywords) || []).join(', ')
@@ -257,12 +259,15 @@ function JobModal({ job, onClose }) {
         await fetch(`${API}/api/jobs/${job.id}`, {
           method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
         });
+        onClose();
       } else {
-        await fetch(`${API}/api/jobs/`, {
+        const res = await fetch(`${API}/api/jobs/`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
         });
+        const newJob = await res.json();
+        onClose();
+        if (newJob?.id) router.push(`/pipeline/${newJob.id}`);
       }
-      onClose();
     } catch (e) { alert('Error: ' + e.message); }
     setSaving(false);
   };
