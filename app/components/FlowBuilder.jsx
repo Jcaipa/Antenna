@@ -40,7 +40,32 @@ const CHANNEL_TYPES = [
 const PALETTE = [
   { group:'Triggers', items:[{ type:'schedule', label:'Schedule', icon:'⏰', color:'#6364FF' }]},
   { group:'Input', items:[{ type:'keywords', label:'Keywords', icon:'🔑', color:'#ff5a1f' }]},
-  { group:'Canales', items:CHANNEL_TYPES },
+  { group:'Social', items:[
+    { type:'x', label:'X/Twitter', icon:'𝕏', color:'#1DA1F2' },
+    { type:'reddit', label:'Reddit', icon:'🟠', color:'#FF4500' },
+    { type:'bluesky', label:'Bluesky', icon:'🦋', color:'#0085FF' },
+    { type:'mastodon', label:'Mastodon', icon:'🐘', color:'#6364FF' },
+    { type:'tiktok', label:'TikTok', icon:'🎵', color:'#000' },
+  ]},
+  { group:'Noticias', items:[
+    { type:'news', label:'Noticias', icon:'📰', color:'#2D3748' },
+    { type:'hacker_news', label:'Hacker News', icon:'🟧', color:'#FF6600' },
+    { type:'google_alert', label:'Google Alerts', icon:'🔔', color:'#4285F4' },
+  ]},
+  { group:'Video', items:[
+    { type:'youtube', label:'YouTube', icon:'▶️', color:'#FF0000' },
+  ]},
+  { group:'SEO & Search', items:[
+    { type:'google_serp', label:'SERP', icon:'🔍', color:'#34A853' },
+    { type:'google_trends', label:'Trends', icon:'📈', color:'#4285F4' },
+  ]},
+  { group:'Ads', items:[
+    { type:'google_ads', label:'Google Ads', icon:'🎯', color:'#FBBC04' },
+    { type:'meta_ads', label:'Meta Ads', icon:'📱', color:'#1877F2' },
+  ]},
+  { group:'Web', items:[
+    { type:'site_monitor', label:'Sitios Web', icon:'🌐', color:'#6B7280' },
+  ]},
   { group:'Alertas', items:[
     { type:'google-chat', label:'Google Chat', icon:'📢', color:'#34A853' },
     { type:'email-alert', label:'Email Alert', icon:'📧', color:'#F59E0B' },
@@ -179,7 +204,7 @@ export default function FlowBuilder({ job, onRun, onSave, onBack }) {
   const [nodeData, setNodeData] = useState({});
   const [saving, setSaving] = useState(false);
   const [showAI, setShowAI] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState({ 'Triggers': true, 'Input': true, 'Canales': false, 'Alertas': false });
+  const [expandedGroups, setExpandedGroups] = useState({ 'Triggers': true, 'Input': true, 'Social': false, 'Noticias': false, 'Video': false, 'SEO & Search': false, 'Ads': false, 'Web': false, 'Alertas': false });
   const [aiM, setAiM] = useState([]);
   const [aiI, setAiI] = useState('');
   const [aiS, setAiS] = useState(false);
