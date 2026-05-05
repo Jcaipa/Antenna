@@ -1,38 +1,28 @@
 'use client';
-import { useState, useEffect } from 'react';
-import useSWR from 'swr';
-import { apiFetch } from '../../lib/api';
-import Sidebar from '../../components/Sidebar';
+import { useState, useEffect, useRef } from 'react';
+import UnifiedShell from '../../components/UnifiedShell';
+import Button from '../../components/ui/Button';
+import Card from '../../components/ui/Card';
+import Badge from '../../components/ui/Badge';
+import Skeleton from '../../components/ui/Skeleton';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-const CHANNELS = [
-  { id: 'x', label: 'X/Twitter', icon: '𝕏' },
-  { id: 'reddit', label: 'Reddit', icon: '🟠' },
-  { id: 'news', label: 'Noticias', icon: '📰' },
-  { id: 'youtube', label: 'YouTube', icon: '▶️' },
-  { id: 'bluesky', label: 'Bluesky', icon: '🦋' },
-  { id: 'mastodon', label: 'Mastodon', icon: '🐘' },
-  { id: 'hacker_news', label: 'Hacker News', icon: '🟧' },
-  { id: 'google_alert', label: 'Google Alerts', icon: '🔔' },
-  { id: 'google_trends', label: 'Google Trends', icon: '📈' },
-  { id: 'google_serp', label: 'Google SERP', icon: '🔍' },
-  { id: 'google_ads', label: 'Google Ads', icon: '🎯' },
-  { id: 'meta_ads', label: 'Meta Ads', icon: '📱' },
-  { id: 'site_monitor', label: 'Sitios Web', icon: '🌐' },
-  { id: 'tiktok', label: 'TikTok', icon: '🎵' },
-];
-
-const SOURCE_COLORS = {
-  x: '#1DA1F2', reddit: '#FF4500', news: '#333', youtube: '#FF0000',
-  bluesky: '#0085FF', mastodon: '#6364FF', hacker_news: '#FF6600',
-  google_alert: '#4285F4',
-  google_trends: '#4285F4',
-  google_serp: '#34A853',
-  google_ads: '#FBBC04',
-  meta_ads: '#1877F2',
-  site_monitor: '#6B7280',
-  tiktok: '#000000',
+const CHANNELS = {
+  x: { label: 'X/Twitter', icon: '𝕏', color: '#1DA1F2' },
+  reddit: { label: 'Reddit', icon: '🟠', color: '#FF4500' },
+  news: { label: 'Noticias', icon: '📰', color: '#2D3748' },
+  youtube: { label: 'YouTube', icon: '▶️', color: '#FF0000' },
+  bluesky: { label: 'Bluesky', icon: '🦋', color: '#0085FF' },
+  mastodon: { label: 'Mastodon', icon: '🐘', color: '#6364FF' },
+  hacker_news: { label: 'Hacker News', icon: '🟧', color: '#FF6600' },
+  google_alert: { label: 'Google Alerts', icon: '🔔', color: '#4285F4' },
+  google_trends: { label: 'Google Trends', icon: '📈', color: '#4285F4' },
+  google_serp: { label: 'Google SERP', icon: '🔍', color: '#34A853' },
+  google_ads: { label: 'Google Ads', icon: '🎯', color: '#FBBC04' },
+  meta_ads: { label: 'Meta Ads', icon: '📱', color: '#1877F2' },
+  site_monitor: { label: 'Sitios Web', icon: '🌐', color: '#6B7280' },
+  tiktok: { label: 'TikTok', icon: '🎵', color: '#000000' },
 };
 
 export default function MonitorsPage() {
@@ -41,19 +31,16 @@ export default function MonitorsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [results, setResults] = useState([]);
-  const [expandedResult, setExpandedResult] = useState(null);
   const [runOutput, setRunOutput] = useState('');
+  const [runningJobId, setRunningJobId] = useState(null);
+  const outputRef = useRef(null);
 
   const fetchJobs = async () => {
     try {
       const res = await fetch(`${API}/api/jobs/`);
       const data = await res.json();
       setJobs(data.items || []);
-    } catch (e) {
-      console.error('Error fetching jobs:', e);
-    }
+    } catch (e) { console.error(e); }
     setLoading(false);
   };
 
@@ -68,16 +55,9 @@ export default function MonitorsPage() {
     fetchJobs();
   };
 
-  const deleteJob = async (id) => {
-    if (!confirm('Eliminar este job?')) return;
-    await fetch(`${API}/api/jobs/${id}`, { method: 'DELETE' });
-    fetchJobs();
-  };
-
   const runJob = async (job) => {
+    setRunningJobId(job.id);
     setRunOutput('');
-    setSelectedJob(null);
-    setResults([]);
     try {
       const res = await fetch(`${API}/api/jobs/${job.id}/run`, { method: 'POST' });
       const reader = res.body.getReader();
@@ -88,417 +68,229 @@ export default function MonitorsPage() {
         if (done) break;
         output += decoder.decode(value, { stream: true });
         setRunOutput(output);
+        if (outputRef.current) outputRef.current.scrollTop = outputRef.current.scrollHeight;
       }
-    } catch (e) {
-      setRunOutput(`Error: ${e.message}`);
-    }
-    // Auto-fetch results after run completes
-    setSelectedJob(job);
-    fetchResults(job.id);
+    } catch (e) { setRunOutput(`Error: ${e.message}`); }
+    setRunningJobId(null);
+    fetchJobs();
   };
 
-  const fetchResults = async (jobId) => {
-    try {
-      const res = await fetch(`${API}/api/jobs/${jobId}/results?limit=100`);
-      const data = await res.json();
-      setResults(data.items || []);
-    } catch (e) {
-      console.error('Error fetching results:', e);
-    }
+  const deleteJob = async (id) => {
+    if (!confirm('Eliminar este monitor?')) return;
+    await fetch(`${API}/api/jobs/${id}`, { method: 'DELETE' });
+    fetchJobs();
   };
-
-  useEffect(() => {
-    if (selectedJob) fetchResults(selectedJob.id);
-  }, [selectedJob]);
-
-  if (loading) return <div style={{ padding: 40, textAlign: 'center' }}>Cargando monitores...</div>;
 
   return (
-    <div className="app-shell">
-      <Sidebar />
-      <main className="workspace">
-        <header className="topbar">
-          <div>
-            <h1 className="syne" style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.03em', margin: 0 }}>
-              Monitores
-            </h1>
-            <p style={{ fontSize: 13, color: 'var(--ink-3)', margin: '2px 0 0' }}>
-              Configura jobs de monitoreo y recibe alertas en Google Chat
-            </p>
-          </div>
-          <button onClick={() => setShowCreate(true)} style={{
-            background: 'linear-gradient(135deg, #ff5a1f, #ff7c2b)', color: '#fff', border: 'none',
-            borderRadius: 12, padding: '12px 24px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-          }}>
-            + Nuevo Monitor
-          </button>
-        </header>
-
-        <section className="content" style={{ maxWidth: 1200 }}>
-          {loading && <div style={{ padding: 40, textAlign: 'center' }}>Cargando monitores...</div>}
-
-          {!loading && jobs.length === 0 && (
-            <p style={{ color: '#999', textAlign: 'center', padding: 40 }}>No hay monitores configurados</p>
-          )}
-
-          {!loading && jobs.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 20 }}>
-              {jobs.map(job => (
-              <div key={job.id} style={{
-            background: '#fff', borderRadius: 16, padding: 20, border: '1px solid #eee',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <button onClick={() => toggleActive(job)} style={{
-                  width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
-                  background: job.active ? '#4CAF50' : '#ccc', position: 'relative',
-                }}>
-                  <span style={{
-                    position: 'absolute', top: 2, width: 20, height: 20, borderRadius: 10,
-                    background: '#fff', left: job.active ? 22 : 2, transition: 'left 0.2s',
-                  }} />
-                </button>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 16 }}>{job.name}</h3>
-                  <span style={{ fontSize: 12, color: '#888' }}>
-                    Cada {job.schedule_minutes}min · Último: {job.last_run_at ? new Date(job.last_run_at).toLocaleString('es') : 'Nunca'}
-                  </span>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {job.channels.map(ch => {
-                  const cn = CHANNELS.find(c => c.id === ch);
-                  return <span key={ch} title={cn?.label} style={{
-                    background: SOURCE_COLORS[ch] || '#999', color: '#fff', borderRadius: 6,
-                    padding: '2px 8px', fontSize: 11, fontWeight: 600,
-                  }}>{cn?.icon || ch}</span>;
-                })}
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => runJob(job)} style={{
-                  background: '#f0f0f0', border: 'none', borderRadius: 8, padding: '6px 12px',
-                  cursor: 'pointer', fontSize: 12,
-                }}>
-                  ▶ Ejecutar
-                </button>
-                <button onClick={() => { setSelectedJob(job); fetchResults(job.id); }} style={{
-                  background: '#f0f0f0', border: 'none', borderRadius: 8, padding: '6px 12px',
-                  cursor: 'pointer', fontSize: 12,
-                }}>
-                  📊 Resultados
-                </button>
-                <button onClick={() => { setEditingJob(job); setShowEdit(true); }} style={{
-                  background: '#f0f0f0', border: 'none', borderRadius: 8, padding: '6px 12px',
-                  cursor: 'pointer', fontSize: 12,
-                }}>
-                  ✏️ Editar
-                </button>
-                <button onClick={() => deleteJob(job.id)} style={{
-                  background: '#fee', border: 'none', borderRadius: 8, padding: '6px 12px',
-                  cursor: 'pointer', fontSize: 12, color: '#c00',
-                }}>
-                  🗑
-                </button>
-              </div>
-            </div>
-            <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {(typeof job.keywords === 'string' ? JSON.parse(job.keywords) : job.keywords).map(kw => (
-                <span key={kw} style={{
-                  background: '#f5f0eb', borderRadius: 8, padding: '4px 10px', fontSize: 12,
-                }}>{kw}</span>
-              ))}
-            </div>
-            <div style={{ marginTop: 6, fontSize: 11, color: '#888' }}>
-              {job.notify_google_chat ? '📢 Google Chat' : ''} {job.notify_email ? '📧 Email' : ''}
-            </div>
-          </div>
-        ))}
+    <UnifiedShell>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="font-syne text-2xl tracking-[-0.03em] text-[#201813]">Monitores</h1>
+          <p className="text-[13px] text-[#988d84] mt-1">Configura y ejecuta monitoreo multicanal</p>
+        </div>
+        <Button onClick={() => setShowCreate(true)}>+ Nuevo Monitor</Button>
       </div>
-    )}
-      
-      {/* Live Output */}
-      {runOutput && (
-        <div style={{ marginTop: 20, background: '#1a1a2e', borderRadius: 12, padding: 16, maxHeight: 300, overflowY: 'auto' }}>
-          <pre style={{ color: '#0f0', fontSize: 12, margin: 0, whiteSpace: 'pre-wrap' }}>{runOutput}</pre>
+
+      {/* Loading */}
+      {loading && (
+        <div className="space-y-4">
+          {[1,2,3].map(i => (
+            <div key={i} className="bg-[rgba(255,255,255,0.82)] border border-[rgba(255,255,255,0.48)] backdrop-blur-[16px] rounded-[20px] p-6">
+              <Skeleton height="24px" width="200px" className="mb-4" />
+              <div className="flex gap-2 mb-3">
+                <Skeleton height="28px" width="60px" />
+                <Skeleton height="28px" width="60px" />
+                <Skeleton height="28px" width="60px" />
+              </div>
+              <Skeleton height="16px" width="300px" />
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Results */}
-      {selectedJob && (
-        <div style={{ marginTop: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: 18 }}>Resultados: {selectedJob.name} ({results.length})</h2>
-            <button onClick={() => fetchResults(selectedJob.id)} style={{
-              background: 'none', border: '1px solid #ddd', borderRadius: 8, padding: '6px 12px',
-              fontSize: 12, cursor: 'pointer', color: '#666',
-            }}>
-              🔄 Refrescar
-            </button>
-          </div>
-          {results.length === 0 ? (
-            <div style={{ padding: 40, textAlign: 'center', color: '#999', background: '#f8f6f4', borderRadius: 12, marginTop: 10 }}>
-              <p style={{ fontSize: 14, margin: 0 }}>No hay resultados de monitoreo aún</p>
-              <p style={{ fontSize: 12, margin: '6px 0 0' }}>Ejecuta el monitor o haz clic en 🔄 Refrescar</p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {results.map((r, i) => (
-                <div key={r.id || i} onClick={() => setExpandedResult(expandedResult === i ? null : i)} style={{
-                  background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #eee',
-                  cursor: 'pointer', transition: 'all 0.2s',
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ background: SOURCE_COLORS[r.source] || '#999', color: '#fff', borderRadius: 6, padding: '2px 8px', fontSize: 11 }}>
-                        {r.source}
-                      </span>
-                      <span style={{ fontSize: 13, fontWeight: 600 }}>{r.keyword}</span>
-                      {r.sentiment && <span style={{ fontSize: 11, color: '#888' }}>
-                        {{positivo: '🟢', negativo: '🔴', neutral: '⚪'}[r.sentiment] || '⚪'} {r.sentiment}
-                      </span>}
-                    </div>
-                    <span style={{ fontSize: 11, color: '#999' }}>{r.created_at ? new Date(r.created_at).toLocaleString('es') : ''}</span>
+      {/* Empty */}
+      {!loading && jobs.length === 0 && (
+        <div className="text-center py-20">
+          <div className="text-5xl mb-4">📡</div>
+          <h2 className="font-syne text-xl text-[#201813] mb-2">Crea tu primer monitor</h2>
+          <p className="text-[13px] text-[#988d84] mb-6">Define keywords y canales para empezar a escuchar</p>
+          <Button onClick={() => setShowCreate(true)}>+ Crear Monitor</Button>
+        </div>
+      )}
+
+      {/* Jobs grid */}
+      {!loading && jobs.length > 0 && (
+        <div className="space-y-4">
+          {jobs.map(job => (
+            <Card key={job.id} className="!p-5">
+              <div className="flex items-start justify-between gap-4">
+                {/* Left: job info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-2">
+                    <button
+                      onClick={() => toggleActive(job)}
+                      className={`w-[44px] h-[24px] rounded-full relative transition-colors flex-shrink-0 ${
+                        job.active ? 'bg-[#2b8e5c]' : 'bg-[#ccc]'
+                      }`}
+                    >
+                      <span className={`absolute top-[2px] w-[20px] h-[20px] rounded-full bg-white shadow transition-all ${
+                        job.active ? 'left-[22px]' : 'left-[2px]'
+                      }`} />
+                    </button>
+                    <h3 className="font-syne text-[16px] text-[#201813]">{job.name}</h3>
+                    <Badge color={job.active ? 'green' : 'gray'}>{job.active ? 'Activo' : 'Pausado'}</Badge>
                   </div>
-                  <p style={{ margin: '4px 0 0', fontSize: 13, color: '#444', lineHeight: 1.4 }}>
-                    {r.title || (r.text || '').slice(0, 150)}
-                  </p>
-                  {expandedResult === i && (
-                    <div style={{ marginTop: 12, padding: '12px', background: '#f8f8f8', borderRadius: 8 }}>
-                      <p style={{ fontSize: 13, lineHeight: 1.6, margin: 0 }}>{r.text}</p>
-                      {r.url && <a href={r.url} target="_blank" rel="noopener" style={{ color: '#ff5a1f', fontSize: 12, marginTop: 8, display: 'inline-block' }}>🔗 Abrir original</a>}
-                      {r.score !== null && <span style={{ marginLeft: 12, fontSize: 12, color: '#666' }}>Score: {r.score}</span>}
-                      {r.metadata && <pre style={{ fontSize: 10, color: '#999', marginTop: 8, maxHeight: 200, overflow: 'auto' }}>{JSON.stringify(r.metadata, null, 2)}</pre>}
-                    </div>
-                  )}
+
+                  {/* Keywords */}
+                  <div className="flex gap-1.5 flex-wrap mb-3">
+                    {(typeof job.keywords === 'string' ? JSON.parse(job.keywords) : job.keywords || []).map(kw => (
+                      <span key={kw} className="text-[11px] text-[#5f564f] bg-[rgba(32,24,19,0.06)] px-[8px] py-[2px] rounded-[6px]">{kw}</span>
+                    ))}
+                  </div>
+
+                  {/* Channel badges */}
+                  <div className="flex gap-1.5 flex-wrap mb-2">
+                    {(typeof job.channels === 'string' ? JSON.parse(job.channels) : job.channels || []).map(ch => {
+                      const cn = CHANNELS[ch];
+                      return cn ? (
+                        <span
+                          key={ch}
+                          className="inline-flex items-center gap-1 text-[10px] font-bold px-[8px] py-[2px] rounded-[6px] text-white"
+                          style={{ background: cn.color }}
+                        >
+                          {cn.icon} {cn.label}
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+
+                  {/* Meta */}
+                  <div className="flex items-center gap-4 text-[11px] text-[#988d84]">
+                    <span>Cada {job.schedule_minutes}min</span>
+                    {job.last_run_at && <span>Último: {new Date(job.last_run_at).toLocaleString('es')}</span>}
+                    <span>{job.notify_google_chat ? '📢' : ''} {job.notify_email ? '📧' : ''}</span>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
+
+                {/* Right: actions */}
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  <Button size="sm" variant="primary" onClick={() => runJob(job)} disabled={runningJobId === job.id}>
+                    {runningJobId === job.id ? '⏳' : '▶'} Ejecutar
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { setEditingJob(job); setShowEdit(true); }}>
+                    ✏️ Editar
+                  </Button>
+                  <Button size="sm" variant="danger" onClick={() => deleteJob(job.id)}>
+                    🗑 Eliminar
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Run output */}
+      {runOutput && (
+        <div ref={outputRef} className="mt-6 bg-[#1a1a2e] rounded-[16px] p-4 max-h-[300px] overflow-y-auto">
+          <pre className="text-[#0f0] text-[12px] whitespace-pre-wrap m-0 font-mono">{runOutput}</pre>
         </div>
       )}
 
       {/* Create Modal */}
-      {showCreate && <CreateJobModal onClose={() => { setShowCreate(false); fetchJobs(); }} />}
-
-      {/* Edit Modal */}
+      {showCreate && <JobModal onClose={() => { setShowCreate(false); fetchJobs(); }} />}
       {showEdit && editingJob && (
-        <EditJobModal
-          job={editingJob}
-          onClose={() => { setShowEdit(false); setEditingJob(null); fetchJobs(); }}
-        />
+        <JobModal job={editingJob} onClose={() => { setShowEdit(false); setEditingJob(null); fetchJobs(); }} />
       )}
-    </section>
-    </main>
-    </div>
+    </UnifiedShell>
   );
 }
 
-function CreateJobModal({ onClose }) {
-  const [name, setName] = useState('');
-  const [keywords, setKeywords] = useState('');
-  const [channels, setChannels] = useState(['x', 'reddit', 'news', 'youtube', 'bluesky', 'mastodon', 'hacker_news', 'google_alert', 'google_trends', 'google_serp', 'google_ads', 'meta_ads', 'site_monitor']);
-  const [schedule, setSchedule] = useState(60);
-  const [notifyChat, setNotifyChat] = useState(true);
-  const [notifyEmail, setNotifyEmail] = useState(false);
-  const [rssUrls, setRssUrls] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  const save = async () => {
-    setSaving(true);
-    try {
-      await fetch(`${API}/api/jobs/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          keywords: keywords.split(',').map(k => k.trim()).filter(Boolean),
-          channels,
-          schedule_minutes: schedule,
-          notify_google_chat: notifyChat,
-          notify_email: notifyEmail,
-          google_alerts_rss_urls: rssUrls.split(',').map(u => u.trim()).filter(Boolean),
-        }),
-      });
-      onClose();
-    } catch (e) {
-      alert('Error: ' + e.message);
-    }
-    setSaving(false);
-  };
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: 480, maxHeight: '90vh', overflowY: 'auto' }}>
-        <h2 style={{ margin: '0 0 20px' }}>Nuevo Monitor</h2>
-
-        <label style={{ display: 'block', marginBottom: 16 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Nombre</span>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="Vigilancia Visa e Inmigración" style={{
-            width: '100%', padding: 8, borderRadius: 8, border: '1px solid #ddd', marginTop: 4,
-          }} />
-        </label>
-
-        <label style={{ display: 'block', marginBottom: 16 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Keywords (separados por coma)</span>
-          <input value={keywords} onChange={e => setKeywords(e.target.value)} placeholder="visa, inmigración, Estados Unidos" style={{
-            width: '100%', padding: 8, borderRadius: 8, border: '1px solid #ddd', marginTop: 4,
-          }} />
-        </label>
-
-        <div style={{ marginBottom: 16 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Canales</span>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-            {CHANNELS.map(ch => (
-              <button key={ch.id} onClick={() => setChannels(prev =>
-                prev.includes(ch.id) ? prev.filter(c => c !== ch.id) : [...prev, ch.id]
-              )} style={{
-                background: channels.includes(ch.id) ? SOURCE_COLORS[ch.id] : '#f0f0f0',
-                color: channels.includes(ch.id) ? '#fff' : '#666',
-                border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer',
-              }}>
-                {ch.icon} {ch.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <label style={{ display: 'block', marginBottom: 16 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Frecuencia (minutos)</span>
-          <select value={schedule} onChange={e => setSchedule(Number(e.target.value))} style={{
-            width: '100%', padding: 8, borderRadius: 8, border: '1px solid #ddd', marginTop: 4,
-          }}>
-            <option value={30}>Cada 30 minutos</option>
-            <option value={60}>Cada hora</option>
-            <option value={120}>Cada 2 horas</option>
-            <option value={360}>Cada 6 horas</option>
-            <option value={720}>Cada 12 horas</option>
-            <option value={1440}>Cada día</option>
-          </select>
-        </label>
-
-        <label style={{ display: 'block', marginBottom: 16 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>URLs de Google Alerts RSS (separadas por coma, opcional)</span>
-          <input value={rssUrls} onChange={e => setRssUrls(e.target.value)} placeholder="https://www.google.com/alerts/feeds/12345/67890" style={{
-            width: '100%', padding: 8, borderRadius: 8, border: '1px solid #ddd', marginTop: 4,
-          }} />
-        </label>
-
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-            <input type="checkbox" checked={notifyChat} onChange={e => setNotifyChat(e.target.checked)} />
-            <span style={{ fontSize: 13 }}>📢 Google Chat</span>
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-            <input type="checkbox" checked={notifyEmail} onChange={e => setNotifyEmail(e.target.checked)} />
-            <span style={{ fontSize: 13 }}>📧 Email</span>
-          </label>
-        </div>
-
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid #ddd', background: '#fff', cursor: 'pointer' }}>
-            Cancelar
-          </button>
-          <button onClick={save} disabled={!name || !keywords || saving} style={{
-            padding: '8px 20px', borderRadius: 8, border: 'none',
-            background: 'linear-gradient(135deg, #ff5a1f, #ff7c2b)',
-            color: '#fff',
-            cursor: saving ? 'wait' : 'pointer', opacity: saving || !name || !keywords ? 0.6 : 1,
-          }}>
-            {saving ? 'Creando...' : 'Crear Monitor'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EditJobModal({ job, onClose }) {
-  const [name, setName] = useState(job.name || '');
+function JobModal({ job, onClose }) {
+  const isEdit = !!job;
+  const [name, setName] = useState(job?.name || '');
   const [keywords, setKeywords] = useState(
-    (typeof job.keywords === 'string' ? JSON.parse(job.keywords) : job.keywords || []).join(', ')
+    ((typeof job?.keywords === 'string' ? JSON.parse(job.keywords) : job?.keywords) || []).join(', ')
   );
   const [channels, setChannels] = useState(
-    typeof job.channels === 'string' ? JSON.parse(job.channels) : job.channels || []
+    (typeof job?.channels === 'string' ? JSON.parse(job.channels) : job?.channels) ||
+    Object.keys(CHANNELS)
   );
-  const [schedule, setSchedule] = useState(job.schedule_minutes || 60);
-  const [notifyChat, setNotifyChat] = useState(job.notify_google_chat ?? true);
-  const [notifyEmail, setNotifyEmail] = useState(job.notify_email ?? false);
-  const [rssUrls, setRssUrls] = useState(
-    (typeof job.google_alerts_rss_urls === 'string'
-      ? JSON.parse(job.google_alerts_rss_urls)
-      : job.google_alerts_rss_urls || []
-    ).join(', ')
+  const [schedule, setSchedule] = useState(job?.schedule_minutes || 60);
+  const [notifyChat, setNotifyChat] = useState(job?.notify_google_chat ?? true);
+  const [notifyEmail, setNotifyEmail] = useState(job?.notify_email ?? false);
+  const [rssUrl, setRssUrl] = useState(
+    ((typeof job?.google_alerts_rss_urls === 'string' ? JSON.parse(job.google_alerts_rss_urls) : job?.google_alerts_rss_urls) || []).join(', ')
   );
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
     setSaving(true);
     try {
-      await fetch(`${API}/api/jobs/${job.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          keywords: keywords.split(',').map(k => k.trim()).filter(Boolean),
-          channels,
-          schedule_minutes: schedule,
-          notify_google_chat: notifyChat,
-          notify_email: notifyEmail,
-          google_alerts_rss_urls: rssUrls.split(',').map(u => u.trim()).filter(Boolean),
-        }),
-      });
+      const body = {
+        name,
+        keywords: keywords.split(',').map(k => k.trim()).filter(Boolean),
+        channels,
+        schedule_minutes: schedule,
+        notify_google_chat: notifyChat,
+        notify_email: notifyEmail,
+        google_alerts_rss_urls: rssUrl.split(',').map(u => u.trim()).filter(Boolean),
+      };
+      if (isEdit) {
+        await fetch(`${API}/api/jobs/${job.id}`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+        });
+      } else {
+        await fetch(`${API}/api/jobs/`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+        });
+      }
       onClose();
-    } catch (e) {
-      alert('Error: ' + e.message);
-    }
+    } catch (e) { alert('Error: ' + e.message); }
     setSaving(false);
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: 520, maxHeight: '90vh', overflowY: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ margin: 0 }}>Editar Monitor</h2>
-          <span style={{ fontSize: 11, color: '#999', background: '#f5f0eb', borderRadius: 6, padding: '2px 8px' }}>ID: {job.id}</span>
+    <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-[20px] p-7 w-[520px] max-h-[90vh] overflow-y-auto shadow-[0_20px_60px_rgba(31,17,8,0.12)]" onClick={e => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="font-syne text-lg text-[#201813]">{isEdit ? 'Editar' : 'Nuevo'} Monitor</h2>
+          <button onClick={onClose} className="text-[#988d84] hover:text-[#201813] text-lg">✕</button>
         </div>
 
-        <label style={{ display: 'block', marginBottom: 16 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Nombre</span>
-          <input value={name} onChange={e => setName(e.target.value)} style={{
-            width: '100%', padding: 8, borderRadius: 8, border: '1px solid #ddd', marginTop: 4,
-          }} />
+        <label className="block mb-4">
+          <span className="text-[12px] font-bold text-[#5f564f] uppercase tracking-[0.08em] block mb-1.5">Nombre</span>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="Vigilancia Visa" className="w-full px-3.5 py-2.5 rounded-[12px] border border-[rgba(32,24,19,0.12)] text-[13px] text-[#201813] outline-none focus:border-[#ff5a1f] focus:shadow-[0_0_0_3px_rgba(255,90,31,0.12)]" />
         </label>
 
-        <label style={{ display: 'block', marginBottom: 16 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Keywords (separados por coma)</span>
-          <input value={keywords} onChange={e => setKeywords(e.target.value)} placeholder="visa, inmigración, Estados Unidos" style={{
-            width: '100%', padding: 8, borderRadius: 8, border: '1px solid #ddd', marginTop: 4,
-          }} />
+        <label className="block mb-4">
+          <span className="text-[12px] font-bold text-[#5f564f] uppercase tracking-[0.08em] block mb-1.5">Keywords (separadas por coma)</span>
+          <input value={keywords} onChange={e => setKeywords(e.target.value)} placeholder="visa, inmigración, Estados Unidos" className="w-full px-3.5 py-2.5 rounded-[12px] border border-[rgba(32,24,19,0.12)] text-[13px] text-[#201813] outline-none focus:border-[#ff5a1f] focus:shadow-[0_0_0_3px_rgba(255,90,31,0.12)]" />
         </label>
 
-        <div style={{ marginBottom: 16 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Canales</span>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-            {CHANNELS.map(ch => (
-              <button key={ch.id} onClick={() => setChannels(prev =>
-                prev.includes(ch.id) ? prev.filter(c => c !== ch.id) : [...prev, ch.id]
-              )} style={{
-                background: channels.includes(ch.id) ? SOURCE_COLORS[ch.id] : '#f0f0f0',
-                color: channels.includes(ch.id) ? '#fff' : '#666',
-                border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer',
-              }}>
+        <div className="mb-4">
+          <span className="text-[12px] font-bold text-[#5f564f] uppercase tracking-[0.08em] block mb-2">Canales</span>
+          <div className="flex flex-wrap gap-1.5">
+            {Object.entries(CHANNELS).map(([id, ch]) => (
+              <button
+                key={id}
+                onClick={() => setChannels(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id])}
+                className={`px-3 py-1.5 rounded-[8px] text-xs font-bold transition-all ${
+                  channels.includes(id)
+                    ? 'text-white' : 'text-[#5f564f] bg-[#f0f0f0] hover:bg-[#e5e5e5]'
+                }`}
+                style={channels.includes(id) ? { background: ch.color } : {}}
+              >
                 {ch.icon} {ch.label}
               </button>
             ))}
           </div>
         </div>
 
-        <label style={{ display: 'block', marginBottom: 16 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Frecuencia (minutos)</span>
-          <select value={schedule} onChange={e => setSchedule(Number(e.target.value))} style={{
-            width: '100%', padding: 8, borderRadius: 8, border: '1px solid #ddd', marginTop: 4,
-          }}>
+        <label className="block mb-4">
+          <span className="text-[12px] font-bold text-[#5f564f] uppercase tracking-[0.08em] block mb-1.5">Frecuencia</span>
+          <select value={schedule} onChange={e => setSchedule(Number(e.target.value))} className="w-full px-3.5 py-2.5 rounded-[12px] border border-[rgba(32,24,19,0.12)] text-[13px] text-[#201813] outline-none focus:border-[#ff5a1f] bg-white">
             <option value={30}>Cada 30 minutos</option>
             <option value={60}>Cada hora</option>
             <option value={120}>Cada 2 horas</option>
@@ -508,36 +300,27 @@ function EditJobModal({ job, onClose }) {
           </select>
         </label>
 
-        <label style={{ display: 'block', marginBottom: 16 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>URLs de Google Alerts RSS (separadas por coma)</span>
-          <input value={rssUrls} onChange={e => setRssUrls(e.target.value)} placeholder="https://www.google.com/alerts/feeds/12345/67890" style={{
-            width: '100%', padding: 8, borderRadius: 8, border: '1px solid #ddd', marginTop: 4,
-          }} />
+        <label className="block mb-4">
+          <span className="text-[12px] font-bold text-[#5f564f] uppercase tracking-[0.08em] block mb-1.5">Google Alerts RSS URLs</span>
+          <input value={rssUrl} onChange={e => setRssUrl(e.target.value)} placeholder="https://www.google.com/alerts/feeds/..." className="w-full px-3.5 py-2.5 rounded-[12px] border border-[rgba(32,24,19,0.12)] text-[13px] text-[#201813] outline-none focus:border-[#ff5a1f] focus:shadow-[0_0_0_3px_rgba(255,90,31,0.12)]" />
         </label>
 
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-            <input type="checkbox" checked={notifyChat} onChange={e => setNotifyChat(e.target.checked)} />
-            <span style={{ fontSize: 13 }}>📢 Google Chat</span>
+        <div className="flex gap-4 mb-5">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={notifyChat} onChange={e => setNotifyChat(e.target.checked)} className="w-4 h-4 accent-[#ff5a1f]" />
+            <span className="text-[13px] text-[#201813]">📢 Google Chat</span>
           </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-            <input type="checkbox" checked={notifyEmail} onChange={e => setNotifyEmail(e.target.checked)} />
-            <span style={{ fontSize: 13 }}>📧 Email</span>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={notifyEmail} onChange={e => setNotifyEmail(e.target.checked)} className="w-4 h-4 accent-[#ff5a1f]" />
+            <span className="text-[13px] text-[#201813]">📧 Email</span>
           </label>
         </div>
 
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid #ddd', background: '#fff', cursor: 'pointer' }}>
-            Cancelar
-          </button>
-          <button onClick={save} disabled={!name || !keywords || saving} style={{
-            padding: '8px 20px', borderRadius: 8, border: 'none',
-            background: 'linear-gradient(135deg, #ff5a1f, #ff7c2b)',
-            color: '#fff',
-            cursor: saving ? 'wait' : 'pointer', opacity: saving || !name || !keywords ? 0.6 : 1,
-          }}>
-            {saving ? 'Guardando...' : 'Guardar Cambios'}
-          </button>
+        <div className="flex gap-3 justify-end">
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={save} disabled={!name || !keywords || saving}>
+            {saving ? 'Guardando...' : isEdit ? 'Guardar Cambios' : 'Crear Monitor'}
+          </Button>
         </div>
       </div>
     </div>

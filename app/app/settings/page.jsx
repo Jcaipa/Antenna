@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR, { mutate } from 'swr';
-import Sidebar from '../../components/Sidebar';
+import UnifiedShell from '../../components/UnifiedShell';
 import { fetcher, apiFetch } from '../../lib/api';
 import { isLoggedIn } from '../../lib/auth';
 
@@ -49,9 +49,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="app-shell">
-      <Sidebar />
-      <main className="workspace">
+    <UnifiedShell activeTab="settings">
         <header className="topbar">
           <div>
             <h1 className="syne" style={{ fontSize: 24 }}>Configuración del Sistema</h1>
@@ -115,7 +113,6 @@ export default function SettingsPage() {
             ))}
           </div>
         </section>
-      </main>
-    </div>
+      </UnifiedShell>
   );
 }

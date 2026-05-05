@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR, { mutate } from 'swr';
-import Sidebar from '../../components/Sidebar';
+import UnifiedShell from '../../components/UnifiedShell';
 import { fetcher, apiFetch } from '../../lib/api';
 import { isLoggedIn, getUser } from '../../lib/auth';
 
@@ -55,9 +55,7 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="app-shell">
-      <Sidebar />
-      <main className="workspace">
+    <UnifiedShell>
         <header className="topbar">
           <div>
             <h1 className="syne" style={{ fontSize: 24 }}>Gestión de Usuarios</h1>
@@ -133,7 +131,6 @@ export default function UsersPage() {
             </div>
           </div>
         </section>
-      </main>
-    </div>
+      </UnifiedShell>
   );
 }

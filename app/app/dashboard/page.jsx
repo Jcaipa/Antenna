@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
-import Sidebar from '../../components/Sidebar';
+import UnifiedShell from '../../components/UnifiedShell';
 import NewsTable from '../../components/NewsTable';
 import { SentimentDonut, KeywordBar } from '../../components/ReportCharts';
 import ExportBtn from '../../components/ExportBtn';
@@ -47,9 +47,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="app-shell">
-      <Sidebar />
-      <main className="workspace">
+    <UnifiedShell activeTab="dashboard">
         <header className="topbar">
           <div>
             <h1 className="syne" style={{ fontSize: 24, letterSpacing: '-0.03em' }}>Dashboard Inteligente</h1>
@@ -484,8 +482,7 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
-      </main>
-    </div>
+      </UnifiedShell>
   );
 }
 

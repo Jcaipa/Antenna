@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
-import Sidebar from '../../components/Sidebar';
+import UnifiedShell from '../../components/UnifiedShell';
 import { fetcher } from '../../lib/api';
 import { isLoggedIn } from '../../lib/auth';
 
@@ -31,9 +31,7 @@ export default function PipelinesPage() {
   };
 
   return (
-    <div className="app-shell">
-      <Sidebar />
-      <main className="workspace">
+    <UnifiedShell>
         <header className="topbar">
           <div>
             <h1 className="syne" style={{ fontSize: 24, letterSpacing: '-0.03em' }}>Historial de Pipelines</h1>
@@ -130,7 +128,6 @@ export default function PipelinesPage() {
             </p>
           </div>
         </section>
-      </main>
-    </div>
+      </UnifiedShell>
   );
 }
