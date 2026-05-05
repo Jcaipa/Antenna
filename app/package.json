@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.2.4",
     "@xyflow/react": "^12.10.2",
     "chart.js": "^4.4.1",
     "framer-motion": "^12.38.0",
