@@ -65,7 +65,7 @@ function N8nNode({ data }) {
         <span className="text-base">{isRun ? '⏳' : isDone ? '✅' : icon}</span>
         <div className="flex-1 min-w-0">
           <div className="text-[12px] font-bold" style={{ color:isDone?'#10b981':color }}>{label}</div>
-          {isKW && <div className="text-[9px] text-[#888] truncate">{kw||'keywords'}</div>}
+          {isKW && <div className="flex flex-wrap gap-1 mt-1 max-w-[200px]">{kw?.split(',').filter(Boolean).slice(0, 4).map((k,i)=><span key={i} className="text-[8px] bg-[rgba(255,90,31,0.15)] text-[#ff5a1f] px-1.5 py-0.5 rounded-[4px] font-bold truncate max-w-[80px]">{k.trim()}</span>)}</div>}
           {isTrig && <div className="text-[9px] text-[#888]">{sched?FREQ_LABELS[sched]:'—'} · {tz||'UTC'}</div>}
         </div>
         {config?.limit && <span className="text-[9px] text-[#888] bg-[#f5f5f5] rounded px-1.5 py-0.5">{config.limit}</span>}
@@ -77,19 +77,73 @@ function N8nNode({ data }) {
 const nodeTypes = { n8nNode: N8nNode };
 
 /* ── PANELS ── */
-function KWP({ kw, sched, tz, onChange, onClose }) {
+function KWP({ kwArr = [], sched, tz, onChange, onClose }) {
+  const [inputVal, setInputVal] = useState('');
+  
+  const addKw = () => {
+    const trimmed = inputVal.trim();
+    if (!trimmed || kwArr.includes(trimmed)) return;
+    onChange({ kwArr: [...kwArr, trimmed], sched, tz });
+    setInputVal('');
+  };
+
+  const removeKw = (idx) => {
+    onChange({ kwArr: kwArr.filter((_, i) => i !== idx), sched, tz });
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); addKw(); }
+  };
+
   return (
-    <div className="bg-white rounded-[12px] shadow-xl border p-4 w-[280px]">
-      <div className="flex justify-between mb-3"><span className="font-bold text-[13px]">🔑 Keywords</span><button onClick={onClose} className="text-[#888] hover:text-[#000]">✕</button></div>
-      <label className="block mb-2"><span className="text-[9px] font-bold uppercase text-[#888] block mb-1">Keywords</span>
-        <input value={kw} onChange={e=>onChange({...{sched,tz},kw:e.target.value})} className="w-full px-3 py-1.5 rounded-[6px] border text-[12px] outline-none focus:border-[#ff5a1f]" /></label>
-      <div className="grid grid-cols-2 gap-2 mb-2">
-        <label><span className="text-[9px] font-bold uppercase text-[#888] block mb-1">Cada</span>
-          <select value={sched} onChange={e=>onChange({...{kw,tz},sched:parseInt(e.target.value)})} className="w-full px-2 py-1.5 rounded-[6px] border text-[11px] outline-none bg-white">
-            {Object.entries(FREQ_LABELS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>
-        <label><span className="text-[9px] font-bold uppercase text-[#888] block mb-1">Zona</span>
-          <select value={tz} onChange={e=>onChange({...{kw,sched},tz:e.target.value})} className="w-full px-2 py-1.5 rounded-[6px] border text-[11px] outline-none bg-white">
-            {TZ.map(t=><option key={t} value={t}>{t.replace(/_/g,' ')}</option>)}</select></label>
+    <div className="bg-white rounded-[14px] shadow-xl border p-5 w-[340px]">
+      <div className="flex justify-between items-center mb-4">
+        <span className="font-bold text-[15px] flex items-center gap-2">🔑 Keywords</span>
+        <button onClick={onClose} className="text-[#888] hover:text-[#000] text-lg">✕</button>
+      </div>
+
+      <label className="block mb-3">
+        <span className="text-[10px] font-bold uppercase text-[#888] block mb-1.5">Agregar keywords</span>
+        <div className="flex gap-1.5">
+          <input value={inputVal} onChange={e => setInputVal(e.target.value)} onKeyDown={handleKeyDown}
+            placeholder="Escribe y presiona Enter"
+            className="flex-1 px-3 py-2 rounded-[8px] border text-[13px] outline-none focus:border-[#ff5a1f]" />
+          <button onClick={addKw} className="px-3 py-2 rounded-[8px] bg-[#ff5a1f] text-white text-[13px] font-bold hover:bg-[#e04a10]">+</button>
+        </div>
+        <div className="text-[10px] text-[#888] mt-1">Presiona Enter para agregar cada keyword</div>
+      </label>
+
+      {kwArr.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-3 p-3 bg-[#f8f6f4] rounded-[8px] max-h-[180px] overflow-y-auto">
+          {kwArr.map((kw, i) => (
+            <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] bg-white border text-[12px] font-bold shadow-sm" style={{ borderColor: '#ff5a1f', color: '#ff5a1f' }}>
+              {kw}
+              <button onClick={() => removeKw(i)} className="text-[#888] hover:text-[#ff5a1f] ml-0.5 text-[14px] leading-none">×</button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3">
+        <label className="block">
+          <span className="text-[10px] font-bold uppercase text-[#888] block mb-1">Cada</span>
+          <select value={sched} onChange={e => onChange({ kwArr, sched: parseInt(e.target.value), tz })}
+            className="w-full px-3 py-2 rounded-[8px] border text-[12px] outline-none bg-white">
+            {Object.entries(FREQ_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+        </label>
+        <label className="block">
+          <span className="text-[10px] font-bold uppercase text-[#888] block mb-1">Zona</span>
+          <select value={tz} onChange={e => onChange({ kwArr, sched, tz: e.target.value })}
+            className="w-full px-3 py-2 rounded-[8px] border text-[12px] outline-none bg-white">
+            {TZ.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
+          </select>
+        </label>
+      </div>
+
+      <div className="text-[11px] text-[#888] bg-[rgba(32,24,19,0.04)] rounded-[8px] p-3 mt-3 leading-relaxed">
+        <strong>{kwArr.length}</strong> keywords configuradas · 
+        Se ejecutará <strong>cada {FREQ_LABELS[sched] || sched + ' min'}</strong> en <strong>{tz}</strong>
       </div>
     </div>
   );
@@ -112,7 +166,7 @@ function CHP({ type, config, onChange, onClose }) {
 /* ── MAIN ── */
 export default function FlowBuilder({ job, onRun, onSave, onBack }) {
   const [jobName, setJobName] = useState(job?.name||'');
-  const [keywordsStr, setKeywordsStr] = useState(((typeof job?.keywords==='string'?JSON.parse(job.keywords):job?.keywords)||[]).join(', '));
+  const [keywordsArr, setKeywordsArr] = useState((typeof job?.keywords==='string'?JSON.parse(job.keywords):job?.keywords)||[]);
   const activeCh = (typeof job?.channels==='string'?JSON.parse(job.channels):job?.channels)||[];
   const [sched, setSched] = useState(job?.schedule_minutes||60);
   const [tz, setTz] = useState('America/Bogota');
@@ -138,7 +192,7 @@ export default function FlowBuilder({ job, onRun, onSave, onBack }) {
   const hLayout = useMemo(() => {
     const n = [];
     n.push({ id:'trigger', type:'n8nNode', position:{ x:30, y:150 }, data:{ type:'schedule', label:'Schedule', icon:'⏰', color:'#6364FF', state:'idle', sched, tz } });
-    n.push({ id:'kw', type:'n8nNode', position:{ x:230, y:150 }, data:{ type:'keywords', label:'Keywords', icon:'🔑', color:'#ff5a1f', state:'idle', kw:keywordsStr } });
+    n.push({ id:'kw', type:'n8nNode', position:{ x:230, y:150 }, data:{ type:'keywords', label:'Keywords', icon:'🔑', color:'#ff5a1f', state:'idle', kw:keywordsArr.join(', ') } });
     const maxPerCol = 4;
     const chW = 200; const chH = 85;
     activeCh.forEach((t,i) => {
@@ -150,13 +204,13 @@ export default function FlowBuilder({ job, onRun, onSave, onBack }) {
     if(notifyChat) n.push({ id:'chat', type:'n8nNode', position:{ x:880, y:engY-30 }, data:{ type:'google-chat', label:'Google Chat', icon:'📢', color:'#34A853', state:'idle' } });
     if(notifyEmail) n.push({ id:'email', type:'n8nNode', position:{ x:880, y:engY+30 }, data:{ type:'email-alert', label:'Email Alert', icon:'📧', color:'#F59E0B', state:'idle' } });
     return n;
-  }, [keywordsStr, activeCh, sched, tz, notifyChat, notifyEmail, nodeData, defC]);
+  }, [keywordsArr, activeCh, sched, tz, notifyChat, notifyEmail, nodeData, defC]);
 
   /* ── VERTICAL LAYOUT (top → bottom) ── */
   const vLayout = useMemo(() => {
     const n = [];
     n.push({ id:'trigger', type:'n8nNode', position:{ x:250, y:20 }, data:{ type:'schedule', label:'Schedule', icon:'⏰', color:'#6364FF', state:'idle', sched, tz } });
-    n.push({ id:'kw', type:'n8nNode', position:{ x:250, y:130 }, data:{ type:'keywords', label:'Keywords', icon:'🔑', color:'#ff5a1f', state:'idle', kw:keywordsStr } });
+    n.push({ id:'kw', type:'n8nNode', position:{ x:250, y:130 }, data:{ type:'keywords', label:'Keywords', icon:'🔑', color:'#ff5a1f', state:'idle', kw:keywordsArr.join(', ') } });
     const cols = 3;
     activeCh.forEach((t,i) => {
       const ch = CHANNEL_TYPES.find(c=>c.type===t); if(!ch) return;
@@ -167,7 +221,7 @@ export default function FlowBuilder({ job, onRun, onSave, onBack }) {
     if(notifyChat) n.push({ id:'chat', type:'n8nNode', position:{ x:150, y:oy+110 }, data:{ type:'google-chat', label:'Google Chat', icon:'📢', color:'#34A853', state:'idle' } });
     if(notifyEmail) n.push({ id:'email', type:'n8nNode', position:{ x:350, y:oy+110 }, data:{ type:'email-alert', label:'Email Alert', icon:'📧', color:'#F59E0B', state:'idle' } });
     return n;
-  }, [keywordsStr, activeCh, sched, tz, notifyChat, notifyEmail, nodeData, defC]);
+  }, [keywordsArr, activeCh, sched, tz, notifyChat, notifyEmail, nodeData, defC]);
 
   const [layoutHoriz, setLayoutHoriz] = useState(true);
   const initialNodes = layoutHoriz ? hLayout : vLayout;
@@ -239,8 +293,9 @@ export default function FlowBuilder({ job, onRun, onSave, onBack }) {
   const save = async()=>{
     setSaving(true);
     const ch = [...new Set(nodes.filter(n=>n.id.startsWith('ch-')).map(n=>n.data?.type))];
-    try{if(onSave) await onSave({name:jobName,keywords:keywordsStr.split(',').map(k=>k.trim()).filter(Boolean),channels:ch,schedule_minutes:sched,notify_google_chat:notifyChat,notify_email:notifyEmail});}
-    catch(e){alert('Error: '+e.message);}
+    try{
+      if(onSave) await onSave({name:jobName,keywords:keywordsArr,channels:ch,schedule_minutes:sched,notify_google_chat:notifyChat,notify_email:notifyEmail});
+    }catch(e){alert('Error: '+e.message);}
     setSaving(false);
   };
 
@@ -248,7 +303,7 @@ export default function FlowBuilder({ job, onRun, onSave, onBack }) {
     if(!aiI.trim()||aiS) return;
     setAiM(p=>[...p,{role:'user',text:aiI}]); setAiI(''); setAiS(true);
     try{
-      const r = await fetch(`${API}/api/ai/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:`Contexto: monitor "${jobName}" keywords:${keywordsStr}. ${aiI}. Espanol.`})});
+      const r = await fetch(`${API}/api/ai/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:`Contexto: monitor "${jobName}" keywords:${keywordsArr.join(", ")}. ${aiI}. Espanol.`})});
       const d = await r.json();
       setAiM(p=>[...p,{role:'assistant',text:d.response||d.message||d.text||'Sin respuesta'}]);
     }catch{setAiM(p=>[...p,{role:'assistant',text:'Error AI'}]);}
@@ -326,8 +381,8 @@ export default function FlowBuilder({ job, onRun, onSave, onBack }) {
 
               {showCfg==='kw' && (
                 <div className="absolute top-3 left-3 z-20">
-                  <KWP kw={keywordsStr} sched={sched} tz={tz}
-                    onChange={({kw,sched:sk,tz:tz2})=>{if(kw!==undefined)setKeywordsStr(kw);if(sk)setSched(sk);if(tz2)setTz(tz2);}}
+                  <KWP kwArr={keywordsArr} sched={sched} tz={tz}
+                    onChange={({kwArr,sched:sk,tz:tz2})=>{if(kwArr!==undefined)setKeywordsArr(kwArr);if(sk)setSched(sk);if(tz2)setTz(tz2);}}
                     onClose={()=>setShowCfg('')} />
                 </div>
               )}
