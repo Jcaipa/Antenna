@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# Database
+antenna.db
+
+# Logs
+*.log
+backend.pid
+
+# OS
+.DS_Store
+
+# Data outputs (generated at runtime)
+**/*.csv
+snapshots/
+services/competitive/snapshots/
+x_*.csv

@@ -24,3 +24,8 @@ deep-translator==1.11.4
 newspaper3k==0.2.8
 nltk==3.9.2
 playwright==1.58.0
+Pillow==10.3.0
+snscrape==0.7.0.20230616
+
+# X/Twitter API
+tweepy==4.14.0
