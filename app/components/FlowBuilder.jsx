@@ -15,34 +15,31 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import {
-  FaXTwitter, FaRedditAlien, FaYoutube, FaBluesky,
+  FaXTwitter, FaReddit, FaYoutube,
 } from 'react-icons/fa6';
 import { FaMastodon, FaTiktok, FaGoogle, FaFacebook } from 'react-icons/fa';
-import { SiYcombinator, SiGoogleads, SiGoogletagmanager } from 'react-icons/si';
-import { HiOutlineGlobe, HiOutlineNewspaper } from 'react-icons/hi2';
+import { SiYcombinator, SiGoogleads } from 'react-icons/si';
+import { HiOutlineNewspaper } from 'react-icons/hi2';
 import { MdOutlineTrendingUp, MdAdsClick } from 'react-icons/md';
+import { HiGlobeAlt } from 'react-icons/hi2';
 
 const ChannelIcon = ({ type, size = 16 }) => {
-  const s = { fontSize: size, lineHeight: 1 };
+  const s = { fontSize: size, lineHeight: 1, display: 'inline-flex', alignItems: 'center' };
   switch(type) {
     case 'x': return <FaXTwitter style={s} />;
-    case 'reddit': return <FaRedditAlien style={s} />;
-    case 'youtube': return <FaYoutube style={s} />;
-    case 'bluesky': return <FaBluesky style={s} />;
-    case 'mastodon': return <FaMastodon style={s} />;
+    case 'reddit': return <FaReddit style={{...s, color: '#FF4500'}} />;
+    case 'youtube': return <FaYoutube style={{...s, color: '#FF0000'}} />;
+    case 'bluesky': return <span style={{...s, fontSize: size+2}}>🦋</span>;
+    case 'mastodon': return <FaMastodon style={{...s, color: '#6364FF'}} />;
     case 'tiktok': return <FaTiktok style={s} />;
     case 'hacker_news': return <SiYcombinator style={{...s, color: '#FF6600'}} />;
-    case 'google_alert': return <FaGoogle style={s} />;
-    case 'google_trends': return <MdOutlineTrendingUp style={s} />;
-    case 'google_serp': return <SiGoogletagmanager style={s} />;
-    case 'google_ads': return <SiGoogleads style={s} />;
-    case 'meta_ads': return <FaFacebook style={s} />;
-    case 'site_monitor': return <HiOutlineGlobe style={s} />;
+    case 'google_alert': return <FaGoogle style={{...s, color: '#4285F4'}} />;
+    case 'google_trends': return <MdOutlineTrendingUp style={{...s, color: '#4285F4'}} />;
+    case 'google_serp': return <span style={s}>🔍</span>;
+    case 'google_ads': return <SiGoogleads style={{...s, color: '#FBBC04'}} />;
+    case 'meta_ads': return <FaFacebook style={{...s, color: '#1877F2'}} />;
+    case 'site_monitor': return <HiGlobeAlt style={{...s, color: '#6B7280'}} />;
     case 'news': return <HiOutlineNewspaper style={s} />;
-    case 'schedule': return <span>⏰</span>;
-    case 'keywords': return <span>🔑</span>;
-    case 'google-chat': return <span>📢</span>;
-    case 'email-alert': return <span>📧</span>;
     default: return <MdAdsClick style={s} />;
   }
 };
