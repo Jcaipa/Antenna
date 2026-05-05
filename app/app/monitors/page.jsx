@@ -227,31 +227,24 @@ export default function MonitorsPage() {
         </div>
       )}
 
-      {/* Flow view */}
-      {!loading && jobs.length > 0 && viewMode === 'flow' && (
-        <div>
-          {/* Job selector */}
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-[13px] font-bold text-[#5f564f]">Monitor:</span>
-            <select
-              value={flowJob?.id || ''}
-              onChange={(e) => setFlowJob(jobs.find(j => j.id === e.target.value) || jobs[0])}
-              className="px-3 py-1.5 rounded-[10px] border border-[rgba(32,24,19,0.12)] text-[13px] text-[#201813] bg-white outline-none"
-            >
-              {jobs.map(j => (
-                <option key={j.id} value={j.id}>{j.name}</option>
-              ))}
-            </select>
-            <span className="text-[11px] text-[#988d84]">
-              Keywords: {(typeof (flowJob || jobs[0])?.keywords === 'string' ? JSON.parse((flowJob || jobs[0]).keywords) : (flowJob || jobs[0]).keywords || []).join(', ')}
-            </span>
-          </div>
-          <FlowBuilder
-            keywords={(typeof (flowJob || jobs[0])?.keywords === 'string' ? JSON.parse((flowJob || jobs[0]).keywords) : (flowJob || jobs[0]).keywords || [])}
-            channels={(typeof (flowJob || jobs[0])?.channels === 'string' ? JSON.parse((flowJob || jobs[0]).channels) : (flowJob || jobs[0]).channels || [])}
-            onRun={() => runJob(flowJob || jobs[0])}
-          />
-        </div>
+      {/* Flow view - full screen */}
+      {!loading && jobs.length > 0 && viewMode === 'flow' && flowJob && (
+        <FlowBuilder
+          job={flowJob}
+          onBack={() => setViewMode('cards')}
+          onRun={async () => {
+            await runJob(flowJob);
+            fetchJobs();
+          }}
+          onSave={async (body) => {
+            await fetch(`${API}/api/jobs/${flowJob.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+            });
+            fetchJobs();
+          }}
+        />
       )}
 
       {/* Run output */}
