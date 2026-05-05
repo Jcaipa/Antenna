@@ -111,19 +111,22 @@ export default function MonitorsPage() {
 
       {/* Empty */}
       {!loading && jobs.length === 0 && (
-        <div className="text-center py-20">
-          <div className="text-5xl mb-4">📡</div>
-          <h2 className="font-syne text-xl text-[#201813] mb-2">Crea tu primer monitor</h2>
-          <p className="text-[13px] text-[#988d84] mb-6">Define keywords y canales para empezar a escuchar</p>
-          <Button onClick={() => setShowCreate(true)}>+ Crear Monitor</Button>
+        <div className="text-center py-20 animate-fade-up">
+          <div className="text-6xl mb-6 opacity-60">📡</div>
+          <h2 className="font-syne text-2xl text-[#201813] dark:text-[var(--ink)] mb-3">Crea tu primer monitor</h2>
+          <p className="text-[14px] text-[#988d84] mb-8 max-w-md mx-auto leading-relaxed">
+            Define las <strong>keywords</strong> que quieres rastrear, selecciona los <strong>canales</strong>
+            donde buscar (X, Reddit, TikTok, Noticias...), y recibe <strong>alertas</strong> en Google Chat.
+          </p>
+          <Button onClick={() => setShowCreate(true)} className="text-base px-8 py-3">+ Crear Monitor</Button>
         </div>
       )}
 
       {/* Jobs grid */}
       {!loading && jobs.length > 0 && (
         <div className="space-y-4">
-          {jobs.map(job => (
-            <Card key={job.id} className="!p-5">
+          {jobs.map((job, i) => (
+            <Card key={job.id} className="!p-5 animate-fade-up" style={{ animationDelay: `${i * 0.05}s` }}>
               <div className="flex items-start justify-between gap-4">
                 {/* Left: job info */}
                 <div className="flex-1 min-w-0">
@@ -176,7 +179,12 @@ export default function MonitorsPage() {
                 {/* Right: actions */}
                 <div className="flex flex-col gap-2 flex-shrink-0">
                   <Button size="sm" variant="primary" onClick={() => runJob(job)} disabled={runningJobId === job.id}>
-                    {runningJobId === job.id ? '⏳' : '▶'} Ejecutar
+                    {runningJobId === job.id ? (
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-white animate-pulse-slow" />
+                        Ejecutando...
+                      </span>
+                    ) : '▶ Ejecutar'}
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => { setEditingJob(job); setShowEdit(true); }}>
                     ✏️ Editar
