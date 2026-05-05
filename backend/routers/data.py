@@ -1,11 +1,12 @@
 """
 Data router — reads intelligence data from SQLite DB (populated by runner upserts).
 """
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import Optional
 import math
+import os
 
 from database import (
     get_db,
@@ -13,6 +14,10 @@ from database import (
     GoogleTrend, HackerNewsStory,
     CompetitorAuthority, CompetitorTechStack,
     SerpRanking, PaidAd,
+    XProfile, XPost, XComment, SiteSnapshot, Alert, Signal,
+    BlueskyPost, MastodonPost, GoogleAlertItem, HNLead,
+    MonitoringJob, MonitoringResult,
+    TikTokVideo,
 )
 
 router = APIRouter(prefix="/api/data", tags=["data"])
@@ -198,6 +203,285 @@ def paid_signals(db: Session = Depends(get_db)):
     }
 
 
+# ── X / TWITTER PROFILES ───────────────────────────────────────────────────────
+
+@router.get("/x/profiles")
+def x_profiles(
+    keyword: Optional[str] = None,
+    category: Optional[str] = None,
+    sector: Optional[str] = None,
+    limit: int = Query(200, le=1000),
+    db: Session = Depends(get_db),
+):
+    q = db.query(XProfile)
+    if keyword:
+        q = q.filter(
+            (XProfile.handle.ilike(f"%{keyword}%")) |
+            (XProfile.name.ilike(f"%{keyword}%")) |
+            (XProfile.bio.ilike(f"%{keyword}%"))
+        )
+    if category:
+        q = q.filter(XProfile.category == category)
+    if sector:
+        q = q.filter(XProfile.sector.ilike(f"%{sector}%"))
+    rows = q.order_by(XProfile.followers.desc()).limit(limit).all()
+
+    # Sector stats
+    sector_dist = {}
+    cat_dist = {}
+    for r in db.query(XProfile).all():
+        s = r.sector or "sin sector"
+        c = r.category or "sin categoría"
+        sector_dist[s] = sector_dist.get(s, 0) + 1
+        cat_dist[c] = cat_dist.get(c, 0) + 1
+
+    return {
+        "total": len(rows),
+        "items": [_clean(r) for r in rows],
+        "sector_distribution": sector_dist,
+        "category_distribution": cat_dist,
+    }
+
+
+@router.get("/x/profiles/{handle}")
+def x_profile_detail(handle: str, db: Session = Depends(get_db)):
+    profile = db.query(XProfile).filter_by(bkey=handle).first()
+    if not profile:
+        # Also try without @
+        profile = db.query(XProfile).filter(XProfile.handle == handle.lstrip("@")).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Perfil no encontrado")
+
+    tweets = db.query(XPost).filter_by(handle=handle.lstrip("@")).order_by(XPost.fecha.desc()).limit(20).all()
+    return {
+        "profile": _clean(profile),
+        "tweets": [_clean(t) for t in tweets],
+    }
+
+
+@router.patch("/x/profiles/{handle}")
+def update_x_profile(handle: str, body: dict, db: Session = Depends(get_db)):
+    profile = db.query(XProfile).filter(XProfile.handle == handle.lstrip("@")).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Perfil no encontrado")
+    allowed = {"category", "sector", "sector_confidence"}
+    for key in allowed:
+        if key in body:
+            setattr(profile, key, body[key])
+    db.commit()
+    db.refresh(profile)
+    return _clean(profile)
+
+
+@router.get("/x/posts")
+def x_posts(
+    keyword: Optional[str] = None,
+    handle: Optional[str] = None,
+    sentiment: Optional[str] = None,
+    limit: int = Query(200, le=1000),
+    db: Session = Depends(get_db),
+):
+    q = db.query(XPost)
+    if keyword:
+        q = q.filter(XPost.text.ilike(f"%{keyword}%"))
+    if handle:
+        q = q.filter(XPost.handle == handle.lstrip("@"))
+    if sentiment:
+        q = q.filter(XPost.sentiment.ilike(f"%{sentiment}%"))
+    rows = q.order_by(XPost.updated_at.desc()).limit(limit).all()
+    return {"total": len(rows), "items": [_clean(r) for r in rows]}
+
+
+@router.get("/x/comments")
+def x_comments(
+    tweet_id: Optional[str] = None,
+    handle: Optional[str] = None,
+    limit: int = Query(100, le=500),
+    db: Session = Depends(get_db),
+):
+    q = db.query(XComment)
+    if tweet_id:
+        q = q.filter(XComment.tweet_id == tweet_id)
+    if handle:
+        q = q.filter(XComment.author.ilike(f"%{handle}%"))
+    rows = q.order_by(XComment.updated_at.desc()).limit(limit).all()
+    return {"total": len(rows), "items": [_clean(r) for r in rows]}
+
+
+# ── SITE SNAPSHOTS (Competitive) ─────────────────────────────────────────────
+
+@router.get("/competitive/sites")
+def site_snapshots(
+    url: Optional[str] = None,
+    limit: int = Query(50, le=200),
+    db: Session = Depends(get_db),
+):
+    q = db.query(SiteSnapshot)
+    if url:
+        q = q.filter(SiteSnapshot.url.ilike(f"%{url}%"))
+    rows = q.order_by(SiteSnapshot.updated_at.desc()).limit(limit).all()
+    return {"total": len(rows), "items": [_clean(r) for r in rows]}
+
+
+@router.get("/competitive/sites/{snapshot_id}")
+def site_snapshot_detail(snapshot_id: int, db: Session = Depends(get_db)):
+    snap = db.query(SiteSnapshot).filter_by(id=snapshot_id).first()
+    if not snap:
+        raise HTTPException(status_code=404, detail="Snapshot no encontrado")
+    result = _clean(snap)
+
+    # Try to read diff HTML if it exists
+    if snap.diff_text_path and os.path.exists(snap.diff_text_path):
+        with open(snap.diff_text_path, "r", encoding="utf-8") as f:
+            result["diff_html"] = f.read()
+    else:
+        result["diff_html"] = None
+
+    # Check if diff image exists
+    if snap.diff_image_path and os.path.exists(snap.diff_image_path):
+        result["diff_image_exists"] = True
+    else:
+        result["diff_image_exists"] = False
+
+    return result
+
+
+# ── ALERTS ─────────────────────────────────────────────────────────────────────
+
+@router.get("/alerts")
+def get_alerts(
+    dismissed: Optional[bool] = None,
+    limit: int = Query(50, le=200),
+    db: Session = Depends(get_db),
+):
+    q = db.query(Alert).order_by(Alert.created_at.desc())
+    if dismissed is not None:
+        q = q.filter(Alert.dismissed == dismissed)
+    rows = q.limit(limit).all()
+    return {"total": len(rows), "items": [_clean(r) for r in rows]}
+
+
+@router.patch("/alerts/{alert_id}")
+def dismiss_alert(alert_id: int, db: Session = Depends(get_db)):
+    alert = db.query(Alert).filter_by(id=alert_id).first()
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alerta no encontrada")
+    alert.dismissed = True
+    db.commit()
+    return _clean(alert)
+
+
+# ── SIGNALS ────────────────────────────────────────────────────────────────────
+
+@router.get("/signals")
+def get_signals(
+    keyword: Optional[str] = None,
+    source: Optional[str] = None,
+    limit: int = Query(100, le=500),
+    db: Session = Depends(get_db),
+):
+    q = db.query(Signal)
+    if keyword:
+        q = q.filter(Signal.keyword.ilike(f"%{keyword}%"))
+    if source:
+        q = q.filter(Signal.source == source)
+    rows = q.order_by(Signal.updated_at.desc()).limit(limit).all()
+    return {"total": len(rows), "items": [_clean(r) for r in rows]}
+
+
+
+# ── TIKTOK ─────────────────────────────────────────────────────────────────────
+
+@router.get("/tiktok")
+def tiktok_videos(
+    keyword: Optional[str] = None,
+    limit: int = Query(200, le=1000),
+    db: Session = Depends(get_db),
+):
+    q = db.query(TikTokVideo)
+    if keyword:
+        q = q.filter(TikTokVideo.keyword.ilike(f"%{keyword}%"))
+    rows = q.order_by(TikTokVideo.updated_at.desc()).limit(limit).all()
+    return {"total": len(rows), "items": [_clean(r) for r in rows]}
+
+
+# ── BLUESKY ────────────────────────────────────────────────────────────────────
+
+@router.get("/bluesky")
+def bluesky_posts(
+    keyword: Optional[str] = None,
+    limit: int = Query(200, le=1000),
+    db: Session = Depends(get_db),
+):
+    q = db.query(BlueskyPost)
+    if keyword:
+        q = q.filter(BlueskyPost.keyword.ilike(f"%{keyword}%"))
+    rows = q.order_by(BlueskyPost.updated_at.desc()).limit(limit).all()
+    return {"total": len(rows), "items": [_clean(r) for r in rows]}
+
+
+# ── MASTODON ────────────────────────────────────────────────────────────────────
+
+@router.get("/mastodon")
+def mastodon_posts(
+    keyword: Optional[str] = None,
+    limit: int = Query(200, le=1000),
+    db: Session = Depends(get_db),
+):
+    q = db.query(MastodonPost)
+    if keyword:
+        q = q.filter(MastodonPost.keyword.ilike(f"%{keyword}%"))
+    rows = q.order_by(MastodonPost.updated_at.desc()).limit(limit).all()
+    return {"total": len(rows), "items": [_clean(r) for r in rows]}
+
+
+# ── GOOGLE ALERTS ──────────────────────────────────────────────────────────────
+
+@router.get("/google-alerts")
+def google_alerts(
+    keyword: Optional[str] = None,
+    limit: int = Query(200, le=1000),
+    db: Session = Depends(get_db),
+):
+    q = db.query(GoogleAlertItem)
+    if keyword:
+        q = q.filter(GoogleAlertItem.keyword.ilike(f"%{keyword}%"))
+    rows = q.order_by(GoogleAlertItem.updated_at.desc()).limit(limit).all()
+    return {"total": len(rows), "items": [_clean(r) for r in rows]}
+
+
+# ── HN LEADS ────────────────────────────────────────────────────────────────────
+
+@router.get("/hn-leads")
+def hn_leads(
+    keyword: Optional[str] = None,
+    limit: int = Query(200, le=1000),
+    db: Session = Depends(get_db),
+):
+    q = db.query(HNLead)
+    if keyword:
+        q = q.filter(HNLead.keyword.ilike(f"%{keyword}%"))
+    rows = q.order_by(HNLead.points.desc()).limit(limit).all()
+    return {"total": len(rows), "items": [_clean(r) for r in rows]}
+
+
+# ── MONITORING RESULTS ──────────────────────────────────────────────────────────
+
+@router.get("/monitoring-results")
+def monitoring_results(
+    source: Optional[str] = None,
+    keyword: Optional[str] = None,
+    limit: int = Query(200, le=1000),
+    db: Session = Depends(get_db),
+):
+    q = db.query(MonitoringResult)
+    if source:
+        q = q.filter_by(source=source)
+    if keyword:
+        q = q.filter_by(keyword=keyword)
+    rows = q.order_by(MonitoringResult.created_at.desc()).limit(limit).all()
+    return {"total": len(rows), "items": [_clean(r) for r in rows]}
+
 # ── SUMMARY (Home KPIs) ───────────────────────────────────────────────────────
 
 @router.get("/summary")
@@ -210,9 +494,19 @@ def summary(db: Session = Depends(get_db)):
     total_competitors = db.query(func.count(CompetitorAuthority.bkey)).scalar() or 0
     total_serp       = db.query(func.count(SerpRanking.bkey)).scalar() or 0
 
+    total_x_profiles = db.query(func.count(XProfile.bkey)).scalar() or 0
+    total_x_posts    = db.query(func.count(XPost.bkey)).scalar() or 0
+    total_snapshots  = db.query(func.count(SiteSnapshot.bkey)).scalar() or 0
+    total_alerts     = db.query(func.count(Alert.id)).scalar() or 0
+    total_bluesky    = db.query(func.count(BlueskyPost.bkey)).scalar() or 0
+    total_mastodon   = db.query(func.count(MastodonPost.bkey)).scalar() or 0
+    total_alerts     = db.query(func.count(GoogleAlertItem.bkey)).scalar() or 0
+    total_hn_leads   = db.query(func.count(HNLead.bkey)).scalar() or 0
+    total_tiktok     = db.query(func.count(TikTokVideo.bkey)).scalar() or 0
+
     # Sentiment distribution across all social rows
     sent_dist: dict = {}
-    for model in [NewsItem, RedditPost, YouTubeVideo]:
+    for model in [NewsItem, RedditPost, YouTubeVideo, XPost]:
         rows = db.query(model.sentiment, func.count()).group_by(model.sentiment).all()
         for sentiment, count in rows:
             key = sentiment or "neutral"
@@ -227,6 +521,11 @@ def summary(db: Session = Depends(get_db)):
             "total_hn":          total_hn,
             "total_competitors": total_competitors,
             "total_serp":        total_serp,
+            "total_x_profiles":  total_x_profiles,
+            "total_x_posts":     total_x_posts,
+            "total_snapshots":   total_snapshots,
+            "total_alerts":      total_alerts,
+            "total_tiktok":      total_tiktok,
         },
         "sentiment_distribution": sent_dist,
         "modules_status": {
@@ -235,5 +534,7 @@ def summary(db: Session = Depends(get_db)):
             "competitive":      total_competitors > 0,
             "trends":           (total_trends + total_hn) > 0,
             "paid_signals":     db.query(func.count(PaidAd.bkey)).scalar() > 0,
+            "x_profiles":       total_x_profiles > 0,
+            "site_monitor":     total_snapshots > 0,
         },
     }

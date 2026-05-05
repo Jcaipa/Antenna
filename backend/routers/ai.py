@@ -15,6 +15,7 @@ from database import (
     NewsItem, RedditPost, YouTubeVideo,
     GoogleTrend, HackerNewsStory,
     CompetitorAuthority, SerpRanking,
+    XProfile,
 )
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
@@ -174,3 +175,77 @@ def ai_status():
         "gemini_available": bool(GROQ_KEY),
         "missing": [] if GROQ_KEY else ["GROQ_API_KEY"],
     }
+
+
+# ── CATEGORIZE PROFILES ──────────────────────────────────────────────────────
+
+CATEGORIZE_PROMPT = """You are a business intelligence analyst. Classify the following X/Twitter profile into:
+1. category: "empresa" (company/organization) or "persona" (individual person)
+2. sector: one of: tecnología, finanzas, salud, gobierno, turismo, medios, educación, retail, energía, legal, inmobiliario, transporte, otro
+
+Respond ONLY in this exact JSON format, no other text:
+{"category": "empresa|persona", "sector": "sector_name", "confidence": 0.0-1.0, "reasoning": "brief explanation"}
+
+Profile to classify:
+"""
+
+
+@router.post("/categorize_profiles")
+def categorize_profiles(limit: int = 50, db: Session = Depends(get_db)):
+    profiles = db.query(XProfile).filter(
+        (XProfile.category == None) | (XProfile.category == "")
+    ).filter(
+        (XProfile.sector == None) | (XProfile.sector == "")
+    ).limit(limit).all()
+
+    if not profiles:
+        return {"categorized": 0, "message": "No hay perfiles sin categorizar"}
+
+    client = get_client()
+    categorized = 0
+
+    for profile in profiles:
+        context = f"@{profile.handle}\n"
+        if profile.name:
+            context += f"Name: {profile.name}\n"
+        if profile.bio:
+            context += f"Bio: {profile.bio}\n"
+        if profile.location:
+            context += f"Location: {profile.location}\n"
+        if profile.followers:
+            context += f"Followers: {profile.followers}\n"
+
+        try:
+            response = client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": CATEGORIZE_PROMPT},
+                    {"role": "user", "content": context},
+                ],
+                model="llama-3.1-8b-instant",
+                max_tokens=200,
+                temperature=0.3,
+            )
+            result_text = response.choices[0].message.content.strip()
+
+            # Parse JSON from response
+            import json
+            json_start = result_text.find("{")
+            json_end = result_text.rfind("}") + 1
+            if json_start >= 0 and json_end > json_start:
+                data = json.loads(result_text[json_start:json_end])
+                category = data.get("category", "")
+                if category in ("empresa", "persona"):
+                    profile.category = category
+                sector = data.get("sector", "")
+                if sector:
+                    profile.sector = sector
+                profile.sector_confidence = data.get("confidence", 0.5)
+                profile.sector_suggestion = data.get("reasoning", "")
+                categorized += 1
+        except Exception as e:
+            print(f"Error categorizing @{profile.handle}: {e}")
+            continue
+
+        db.commit()
+
+    return {"categorized": categorized, "total_pending": len(profiles)}

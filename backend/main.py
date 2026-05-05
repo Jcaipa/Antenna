@@ -9,7 +9,7 @@ import os
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 from database import init_db
-from routers import auth, data, runner, users, ai
+from routers import auth, data, runner, users, ai, jobs
 
 app = FastAPI(
     title="Antenna Intelligence API",
@@ -37,6 +37,7 @@ app.include_router(data.router)
 app.include_router(runner.router)
 app.include_router(users.router)
 app.include_router(ai.router)
+app.include_router(jobs.router)
 
 
 @app.get("/health")

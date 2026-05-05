@@ -26,9 +26,17 @@ const CATEGORIES = [
     label: 'Social Listening',
     color: '#3b82f6',
     modules: [
-      { id: 'social_news',    label: 'Google News',       icon: '🌍' },
-      { id: 'social_reddit',  label: 'Reddit Feed',       icon: '💬' },
-      { id: 'social_youtube', label: 'YouTube Intel',     icon: '🎥' },
+      { id: 'social_news',    label: 'Noticias (Google + NewsAPI)',  icon: '🌍' },
+      { id: 'social_reddit',  label: 'Reddit Posts',                  icon: '💬' },
+      { id: 'social_youtube', label: 'Videos YouTube',                icon: '🎥' },
+    ],
+  },
+  {
+    label: 'X / Twitter',
+    color: '#1d9bf0',
+    modules: [
+      { id: 'x_playwright',         label: 'Perfil + Tweets (navegador)', icon: '🎭' },
+      { id: 'x_search',             label: 'Búsqueda tweets por keyword', icon: '🔎' },
     ],
   },
   {
@@ -36,21 +44,22 @@ const CATEGORIES = [
     color: '#10b981',
     modules: [
       { id: 'trends',      label: 'Google Trends', icon: '📈' },
-      { id: 'hacker_news', label: 'Hacker News',   icon: '🔥' },
+      { id: 'hacker_news', label: 'Hacker News Tech',   icon: '🔥' },
     ],
   },
   {
     label: 'Competitive Intelligence',
     color: '#f59e0b',
     modules: [
-      { id: 'competitive', label: 'Competitor Monitor', icon: '🕵️' },
+      { id: 'competitive',  label: 'Autoridad + Tech Stack', icon: '🕵️' },
+      { id: 'site_monitor', label: 'Sitios Web (cambios visuales)',    icon: '📸' },
     ],
   },
   {
     label: 'SEO / AEO',
     color: '#8b5cf6',
     modules: [
-      { id: 'seo', label: 'SERP Rankings', icon: '🔍' },
+      { id: 'seo', label: 'Rankings SERP', icon: '🔍' },
     ],
   },
   {
@@ -58,7 +67,7 @@ const CATEGORIES = [
     color: '#ef4444',
     modules: [
       { id: 'google_ads', label: 'Google Ads', icon: '💰' },
-      { id: 'meta_ads',   label: 'Meta Ads',   icon: '📣' },
+      { id: 'meta_ads',   label: 'Meta Ads FB/IG',   icon: '📣' },
     ],
   },
 ];

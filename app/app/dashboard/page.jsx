@@ -6,6 +6,7 @@ import Sidebar from '../../components/Sidebar';
 import NewsTable from '../../components/NewsTable';
 import { SentimentDonut, KeywordBar } from '../../components/ReportCharts';
 import ExportBtn from '../../components/ExportBtn';
+import XProfileCard from '../../components/XProfileCard';
 import { fetcher } from '../../lib/api';
 import { isLoggedIn } from '../../lib/auth';
 
@@ -29,6 +30,11 @@ export default function DashboardPage() {
   const { data: trends, error: trendsErr } = useSWR(`/api/data/trends${query}`, fetcher);
   const { data: comp,   error: compErr }   = useSWR(`/api/data/competitive${query}`, fetcher);
   const { data: paid }   = useSWR(`/api/data/paid${query}`, fetcher);
+  const { data: xData, error: xErr }  = useSWR(`/api/data/x/profiles${query}`, fetcher);
+  const firstHandle = xData?.items?.[0]?.handle;
+  const { data: xDetail } = useSWR(firstHandle ? `/api/data/x/profiles/${firstHandle}` : null, fetcher);
+  const { data: sites }  = useSWR(`/api/data/competitive/sites${query}`, fetcher);
+  const { data: alerts } = useSWR(`/api/data/alerts?dismissed=false`, fetcher);
 
   useEffect(() => {
     if (!isLoggedIn()) router.push('/login');
@@ -64,9 +70,11 @@ export default function DashboardPage() {
           </div>
           <div className="tabs">
             <button onClick={() => setTab('social')}      className={`tab-btn ${currentTab === 'social' ? 'active' : ''}`}>Social</button>
+            <button onClick={() => setTab('x')}            className={`tab-btn ${currentTab === 'x' ? 'active' : ''}`}>X/Twitter</button>
             <button onClick={() => setTab('seo')}         className={`tab-btn ${currentTab === 'seo' ? 'active' : ''}`}>SEO</button>
             <button onClick={() => setTab('trends')}      className={`tab-btn ${currentTab === 'trends' ? 'active' : ''}`}>Trends</button>
             <button onClick={() => setTab('competitive')} className={`tab-btn ${currentTab === 'competitive' ? 'active' : ''}`}>Competencia</button>
+            <button onClick={() => setTab('sites')}       className={`tab-btn ${currentTab === 'sites' ? 'active' : ''}`}>Sitios</button>
             <button onClick={() => setTab('paid')}        className={`tab-btn ${currentTab === 'paid' ? 'active' : ''}`}>Paid</button>
           </div>
         </header>
@@ -279,6 +287,115 @@ export default function DashboardPage() {
                       </tbody>
                     </table>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentTab === 'x' && (
+            <div className="fade-up">
+              {xErr && <div style={{ background: 'var(--danger-soft)', padding: 8, borderRadius: 8, marginBottom: 12, fontSize: 11, color: 'var(--danger)' }}>⚠️ Error al cargar: {xErr.message}</div>}
+              {!xData ? (
+                <div className="loading-center"><div className="spinner"></div><span>Cargando perfiles...</span></div>
+              ) : xData.items?.length > 0 ? (
+                <>
+                  {xErr && <div style={{ background: 'var(--danger-soft)', padding: 8, borderRadius: 8, marginBottom: 12, fontSize: 11, color: 'var(--danger)' }}>Error API: {xErr.message}</div>}
+                  <div className="section-head mb">
+                    <div>
+                      <h2 className="syne" style={{ fontSize: 20 }}>X / Twitter</h2>
+                      <p style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>
+                        {xData.total} perfiles · click para ver detalle
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        onClick={async () => {
+                          const email = JSON.parse(localStorage.getItem('antenna_user') || '{}').email || '';
+                          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/ai/categorize_profiles`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-User-Email': email } });
+                          const d = await res.json();
+                          alert(`✅ ${d.categorized} perfiles categorizados`);
+                        }}
+                        className="btn btn-outline btn-sm"
+                      >🤖 Categorizar todo</button>
+                      <ExportBtn data={xData?.items} filename="x-profiles" />
+                    </div>
+                  </div>
+                  {xData.items.slice(0, 10).map((p, i) => (
+                    <div key={p.handle} style={{ marginBottom: 16 }}>
+                      <XProfileCard profile={p} tweets={i === 0 ? xDetail?.tweets : null} />
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+                  <div style={{ fontSize: 40, marginBottom: 16, opacity: 0.4 }}>X</div>
+                  <h2 className="syne" style={{ fontSize: 20, marginBottom: 8 }}>Sin perfiles aún</h2>
+                  <p style={{ fontSize: 13, color: 'var(--ink-3)', maxWidth: 400, margin: '0 auto' }}>
+                    Usa el Generador de Inteligencia con el módulo <strong>"Perfil + Tweets (navegador)"</strong> para scrapear perfiles de X.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentTab === 'sites' && (
+            <div className="fade-up">
+              <div className="section-head mb">
+                <h2 className="syne">Site Monitor</h2>
+                <p>Capturas de pantalla y detección de cambios en sitios competidores.</p>
+              </div>
+
+              <div className="grid-3 mb">
+                <div className="surface card">
+                  <h3 className="card-title">Snapshots</h3>
+                  <div style={{ fontSize: 28, fontFamily: 'Syne, sans-serif', fontWeight: 700 }}>{sites?.total || 0}</div>
+                  <div className="card-note">Capturas totales</div>
+                </div>
+                <div className="surface card">
+                  <h3 className="card-title">Con Cambios</h3>
+                  <div style={{ fontSize: 28, fontFamily: 'Syne, sans-serif', fontWeight: 700 }}>{sites?.items?.filter(s => s.change_detected).length || 0}</div>
+                  <div className="card-note">Cambios detectados</div>
+                </div>
+                <div className="surface card">
+                  <h3 className="card-title">Similitud Prom.</h3>
+                  <div style={{ fontSize: 28, fontFamily: 'Syne, sans-serif', fontWeight: 700 }}>
+                    {sites?.items?.length ? Math.round(sites.items.reduce((a, s) => a + (s.change_score || 0), 0) / sites.items.length * 100) : 0}%
+                  </div>
+                  <div className="card-note">Score de similitud</div>
+                </div>
+              </div>
+
+              <div className="surface card">
+                <h3 className="card-title" style={{ marginBottom: 16 }}>Historial de Snapshots</h3>
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>URL</th>
+                        <th>Fecha</th>
+                        <th>Cambios</th>
+                        <th>Similitud</th>
+                        <th>Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sites?.items?.map((s, i) => (
+                        <tr key={i}>
+                          <td style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.url}</td>
+                          <td>{s.snapshot_date || '-'}</td>
+                          <td><span className={`badge ${s.change_detected ? 'b-red' : 'b-green'}`}>{s.change_detected ? 'Cambios' : 'Sin cambios'}</span></td>
+                          <td>{s.change_score != null ? `${Math.round((s.change_score || 0) * 100)}%` : '-'}</td>
+                          <td>
+                            {s.diff_text_path ? (
+                              <a href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/files/diff/${encodeURIComponent(s.diff_text_path)}`} target="_blank" className="btn btn-outline btn-sm">Ver Diff</a>
+                            ) : (
+                              <span style={{ fontSize: 11, opacity: 0.5 }}>No disponible</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
