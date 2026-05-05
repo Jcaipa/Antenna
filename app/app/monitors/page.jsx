@@ -126,7 +126,7 @@ export default function MonitorsPage() {
       )}
 
       {/* Cards view */}
-      {!loading && jobs.length > 0 && viewMode === 'cards' && (
+      {!loading && jobs.length > 0 && (
         <div className="space-y-4">
           {jobs.map((job, i) => (
             <Card key={job.id} className="!p-5 animate-fade-up" style={{ animationDelay: `${i * 0.05}s` }}>
