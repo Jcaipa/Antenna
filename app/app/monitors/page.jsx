@@ -5,6 +5,7 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Skeleton from '../../components/ui/Skeleton';
+import FlowBuilder from '../../components/FlowBuilder';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -33,6 +34,8 @@ export default function MonitorsPage() {
   const [editingJob, setEditingJob] = useState(null);
   const [runOutput, setRunOutput] = useState('');
   const [runningJobId, setRunningJobId] = useState(null);
+  const [viewMode, setViewMode] = useState('cards');
+  const [flowJob, setFlowJob] = useState(null);
   const outputRef = useRef(null);
 
   const fetchJobs = async () => {
@@ -86,10 +89,32 @@ export default function MonitorsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-syne text-2xl tracking-[-0.03em] text-[#201813]">Monitores</h1>
+          <h1 className="font-syne text-2xl tracking-[-0.03em] text-[#201813] dark:text-[var(--ink)]">Monitores</h1>
           <p className="text-[13px] text-[#988d84] mt-1">Configura y ejecuta monitoreo multicanal</p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>+ Nuevo Monitor</Button>
+        <div className="flex items-center gap-3">
+          {jobs.length > 0 && (
+            <div className="flex bg-[rgba(32,24,19,0.06)] rounded-[10px] p-0.5">
+              <button
+                onClick={() => setViewMode('cards')}
+                className={`px-3 py-1.5 rounded-[8px] text-xs font-bold transition-all ${
+                  viewMode === 'cards' ? 'bg-white text-[#201813] shadow-sm' : 'text-[#5f564f] hover:text-[#201813]'
+                }`}
+              >
+                📋 Cards
+              </button>
+              <button
+                onClick={() => { setViewMode('flow'); if (!flowJob && jobs.length > 0) setFlowJob(jobs[0]); }}
+                className={`px-3 py-1.5 rounded-[8px] text-xs font-bold transition-all ${
+                  viewMode === 'flow' ? 'bg-white text-[#201813] shadow-sm' : 'text-[#5f564f] hover:text-[#201813]'
+                }`}
+              >
+                🔀 Flow
+              </button>
+            </div>
+          )}
+          <Button onClick={() => setShowCreate(true)}>+ Nuevo Monitor</Button>
+        </div>
       </div>
 
       {/* Loading */}
@@ -122,8 +147,8 @@ export default function MonitorsPage() {
         </div>
       )}
 
-      {/* Jobs grid */}
-      {!loading && jobs.length > 0 && (
+      {/* Cards view */}
+      {!loading && jobs.length > 0 && viewMode === 'cards' && (
         <div className="space-y-4">
           {jobs.map((job, i) => (
             <Card key={job.id} className="!p-5 animate-fade-up" style={{ animationDelay: `${i * 0.05}s` }}>
@@ -186,6 +211,9 @@ export default function MonitorsPage() {
                       </span>
                     ) : '▶ Ejecutar'}
                   </Button>
+                  <Button size="sm" variant="outline" onClick={() => { setFlowJob(job); setViewMode('flow'); }}>
+                    🔀 Flow
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => { setEditingJob(job); setShowEdit(true); }}>
                     ✏️ Editar
                   </Button>
@@ -196,6 +224,33 @@ export default function MonitorsPage() {
               </div>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* Flow view */}
+      {!loading && jobs.length > 0 && viewMode === 'flow' && (
+        <div>
+          {/* Job selector */}
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-[13px] font-bold text-[#5f564f]">Monitor:</span>
+            <select
+              value={flowJob?.id || ''}
+              onChange={(e) => setFlowJob(jobs.find(j => j.id === e.target.value) || jobs[0])}
+              className="px-3 py-1.5 rounded-[10px] border border-[rgba(32,24,19,0.12)] text-[13px] text-[#201813] bg-white outline-none"
+            >
+              {jobs.map(j => (
+                <option key={j.id} value={j.id}>{j.name}</option>
+              ))}
+            </select>
+            <span className="text-[11px] text-[#988d84]">
+              Keywords: {(typeof (flowJob || jobs[0])?.keywords === 'string' ? JSON.parse((flowJob || jobs[0]).keywords) : (flowJob || jobs[0]).keywords || []).join(', ')}
+            </span>
+          </div>
+          <FlowBuilder
+            keywords={(typeof (flowJob || jobs[0])?.keywords === 'string' ? JSON.parse((flowJob || jobs[0]).keywords) : (flowJob || jobs[0]).keywords || [])}
+            channels={(typeof (flowJob || jobs[0])?.channels === 'string' ? JSON.parse((flowJob || jobs[0]).channels) : (flowJob || jobs[0]).channels || [])}
+            onRun={() => runJob(flowJob || jobs[0])}
+          />
         </div>
       )}
 
