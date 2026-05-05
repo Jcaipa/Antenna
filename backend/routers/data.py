@@ -497,12 +497,12 @@ def summary(db: Session = Depends(get_db)):
     total_x_profiles = db.query(func.count(XProfile.bkey)).scalar() or 0
     total_x_posts    = db.query(func.count(XPost.bkey)).scalar() or 0
     total_snapshots  = db.query(func.count(SiteSnapshot.bkey)).scalar() or 0
-    total_alerts     = db.query(func.count(Alert.id)).scalar() or 0
-    total_bluesky    = db.query(func.count(BlueskyPost.bkey)).scalar() or 0
-    total_mastodon   = db.query(func.count(MastodonPost.bkey)).scalar() or 0
-    total_alerts     = db.query(func.count(GoogleAlertItem.bkey)).scalar() or 0
-    total_hn_leads   = db.query(func.count(HNLead.bkey)).scalar() or 0
-    total_tiktok     = db.query(func.count(TikTokVideo.bkey)).scalar() or 0
+    total_alerts        = db.query(func.count(Alert.id)).scalar() or 0
+    total_bluesky       = db.query(func.count(BlueskyPost.bkey)).scalar() or 0
+    total_mastodon      = db.query(func.count(MastodonPost.bkey)).scalar() or 0
+    total_google_alerts = db.query(func.count(GoogleAlertItem.bkey)).scalar() or 0
+    total_hn_leads      = db.query(func.count(HNLead.bkey)).scalar() or 0
+    total_tiktok        = db.query(func.count(TikTokVideo.bkey)).scalar() or 0
 
     # Sentiment distribution across all social rows
     sent_dist: dict = {}
@@ -522,10 +522,14 @@ def summary(db: Session = Depends(get_db)):
             "total_competitors": total_competitors,
             "total_serp":        total_serp,
             "total_x_profiles":  total_x_profiles,
-            "total_x_posts":     total_x_posts,
-            "total_snapshots":   total_snapshots,
-            "total_alerts":      total_alerts,
-            "total_tiktok":      total_tiktok,
+            "total_x_posts":       total_x_posts,
+            "total_snapshots":     total_snapshots,
+            "total_alerts":        total_alerts,
+            "total_tiktok":        total_tiktok,
+            "total_bluesky":       total_bluesky,
+            "total_mastodon":      total_mastodon,
+            "total_google_alerts": total_google_alerts,
+            "total_hn_leads":      total_hn_leads,
         },
         "sentiment_distribution": sent_dist,
         "modules_status": {
